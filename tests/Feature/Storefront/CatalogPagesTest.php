@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Storefront;
 
+use App\Models\ProductVariant;
 use Database\Seeders\CatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -50,6 +51,40 @@ class CatalogPagesTest extends TestCase
                 ->where('filters.q', 'Sneakers')
                 ->where('products.total', 1)
                 ->where('products.data.0.slug', 'everyday-canvas-sneakers')
+            );
+    }
+
+    public function test_shop_price_range_filters_products(): void
+    {
+        $this->get(route('shop.index', ['max_price' => 2000]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.minPrice', 1299)
+                ->where('filters.maxPrice', 2000)
+                ->where('filterOptions.maxPrice', 5899)
+                ->where('products.total', 4)
+            );
+    }
+
+    public function test_shop_stock_filter_excludes_out_of_stock_products(): void
+    {
+        ProductVariant::query()->where('sku', 'ELEC-HEAD-001')->update(['stock_quantity' => 0]);
+
+        $this->get(route('shop.index', ['in_stock' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.inStock', true)
+                ->where('products.total', 7)
+            );
+    }
+
+    public function test_shop_sale_filter_only_lists_discounted_products(): void
+    {
+        $this->get(route('shop.index', ['on_sale' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.onSale', true)
+                ->where('products.total', 7)
             );
     }
 

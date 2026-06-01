@@ -7,6 +7,7 @@ use App\Http\Resources\Storefront\CategoryResource;
 use App\Http\Resources\Storefront\ProductCardResource;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,6 +36,21 @@ class ShopController extends Controller
     {
         $search = trim((string) $request->string('q'));
         $sort = $request->string('sort')->value();
+        $priceBounds = ProductVariant::query()
+            ->where('is_default', true)
+            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+            ->first();
+        $minimumPrice = (int) floor((float) $priceBounds?->min_price);
+        $maximumPrice = (int) ceil((float) $priceBounds?->max_price);
+        $selectedMinimumPrice = $request->filled('min_price')
+            ? max($minimumPrice, $request->integer('min_price'))
+            : $minimumPrice;
+        $selectedMaximumPrice = $request->filled('max_price')
+            ? max($minimumPrice, min($maximumPrice, $request->integer('max_price')))
+            : $maximumPrice;
+        $selectedMinimumPrice = min($selectedMinimumPrice, $selectedMaximumPrice);
+        $inStockOnly = $request->boolean('in_stock');
+        $onSaleOnly = $dealsOnly || $request->boolean('on_sale');
 
         $products = Product::query()
             ->active()
@@ -42,12 +58,17 @@ class ShopController extends Controller
                 'categories',
                 fn (Builder $categoryQuery) => $categoryQuery->whereKey($category->getKey()),
             ))
-            ->when($dealsOnly, fn (Builder $query) => $query->whereHas(
+            ->when($onSaleOnly, fn (Builder $query) => $query->whereHas(
                 'variants',
                 fn (Builder $variantQuery) => $variantQuery
+                    ->where('is_default', true)
                     ->whereNotNull('compare_at_price')
                     ->whereColumn('compare_at_price', '>', 'price'),
             ))
+            ->whereHas('variants', fn (Builder $variantQuery) => $variantQuery
+                ->where('is_default', true)
+                ->whereBetween('price', [$selectedMinimumPrice, $selectedMaximumPrice])
+                ->when($inStockOnly, fn (Builder $stockQuery) => $stockQuery->where('stock_quantity', '>', 0)))
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $searchQuery) use ($search) {
                 $searchQuery
                     ->where('name', 'like', "%{$search}%")
@@ -82,6 +103,14 @@ class ShopController extends Controller
                 'q' => $search,
                 'sort' => $sort,
                 'category' => $category?->slug,
+                'minPrice' => $selectedMinimumPrice,
+                'maxPrice' => $selectedMaximumPrice,
+                'inStock' => $inStockOnly,
+                'onSale' => $onSaleOnly,
+            ],
+            'filterOptions' => [
+                'minPrice' => $minimumPrice,
+                'maxPrice' => $maximumPrice,
             ],
             'pageTitle' => $dealsOnly ? 'Weekend deals' : ($category?->name ?? 'Shop all products'),
             'pageDescription' => $dealsOnly

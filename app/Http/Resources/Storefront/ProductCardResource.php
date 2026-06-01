@@ -15,6 +15,7 @@ class ProductCardResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'description' => $this->description,
             'category' => $this->categories->first()?->name,
             'imageUrl' => $this->images->first()?->url,
             'price' => $variant?->price,

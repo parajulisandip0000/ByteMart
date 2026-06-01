@@ -33,6 +33,7 @@ class HomeController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
+                'description' => $product->description,
                 'category' => $product->categories->first()?->name,
                 'imageUrl' => $product->images->first()?->url,
                 'price' => $product->variants->first()?->price,
