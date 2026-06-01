@@ -93,12 +93,19 @@ class ShopController extends Controller
             ->paginate(12)
             ->withQueryString()
             ->through(fn (Product $product) => ProductCardResource::make($product)->resolve());
+        $topRatedProducts = Product::query()
+            ->active()
+            ->where('is_featured', true)
+            ->with($this->cardRelations())
+            ->limit(4)
+            ->get();
 
         return Inertia::render('storefront/shop', [
             'categories' => CategoryResource::collection(
                 Category::query()->where('is_active', true)->whereNull('parent_id')->withCount('products')->orderBy('sort_order')->get(),
             )->resolve(),
             'products' => $products,
+            'topRatedProducts' => ProductCardResource::collection($topRatedProducts)->resolve(),
             'filters' => [
                 'q' => $search,
                 'sort' => $sort,

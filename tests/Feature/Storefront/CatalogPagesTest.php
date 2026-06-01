@@ -29,6 +29,8 @@ class CatalogPagesTest extends TestCase
                 ->where('pageTitle', 'Shop all products')
                 ->where('products.total', 8)
                 ->has('categories', 6)
+                ->has('topRatedProducts', 4)
+                ->where('topRatedProducts.0.slug', 'pulse-wireless-headphones')
             );
     }
 

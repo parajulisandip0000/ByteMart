@@ -4,13 +4,15 @@ import { useState } from 'react';
 
 import { StorefrontLayout } from '@/components/layout/storefront-layout';
 import { ProductCard } from '@/components/product/product-card';
+import { SidebarProduct } from '@/components/product/sidebar-product';
 import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
-import type { Category, PaginatedProducts } from '@/types';
+import type { Category, PaginatedProducts, Product } from '@/types';
 
 interface ShopProps {
     categories: Category[];
     products: PaginatedProducts;
+    topRatedProducts: Product[];
     filters: {
         q: string;
         sort: string;
@@ -37,6 +39,7 @@ type FilterValues = Pick<
 export default function Shop({
     categories,
     products,
+    topRatedProducts,
     filters,
     filterOptions,
     pageTitle,
@@ -227,6 +230,20 @@ export default function Shop({
                                 </div>
                             </div>
 
+                            <div className="border-b border-slate-200 py-5">
+                                <h3 className="font-black text-slate-900">
+                                    Top rated products
+                                </h3>
+                                <div className="mt-4 grid gap-4">
+                                    {topRatedProducts.map((product) => (
+                                        <SidebarProduct
+                                            key={product.id}
+                                            product={product}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="pt-5">
                                 <button
                                     type="button"
@@ -348,7 +365,7 @@ export default function Shop({
                                 <div
                                     className={
                                         view === 'grid'
-                                            ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3'
+                                            ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4'
                                             : 'grid gap-4'
                                     }
                                 >
