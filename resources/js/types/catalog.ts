@@ -22,9 +22,23 @@ export interface ProductDetail {
     id: number;
     name: string;
     slug: string;
-    description: string | null;
+    shortDescription: string | null;
+    longDescription: string | null;
+    brand: string | null;
+    brandSlug: string | null;
     category: string | null;
     categorySlug: string | null;
+    rating: {
+        average: number;
+        count: number;
+    };
+    reviews: Array<{
+        id: number;
+        name: string;
+        rating: number;
+        comment: string;
+        createdAt: string;
+    }>;
     images: Array<{
         id: number;
         url: string;

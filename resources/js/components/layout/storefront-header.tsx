@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { Heart, Menu, Search, ShoppingBag, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 
+import { StorefrontSearch } from '@/components/layout/storefront-search';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -11,16 +12,43 @@ const navItems = [
     { label: 'About us', href: '/about' },
 ];
 
+const announcements = [
+    'Free delivery inside Kathmandu Valley on orders over Rs. 2,500',
+    'Weekend deals available on selected ByteMart favorites',
+    'Secure shopping with reliable delivery across Nepal',
+    'New arrivals added regularly across every category',
+    'Contact info@bytesphere.com.np for customer support',
+];
+
 export function StorefrontHeader() {
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const isActive = (href: string) =>
         href === '/' ? url === '/' : url.startsWith(href);
 
     return (
         <>
-            <div className="bg-brand-blue px-4 py-2 text-center text-xs font-medium text-white sm:text-sm">
-                Free delivery inside Kathmandu Valley on orders over Rs. 2,500
+            <div
+                className="group overflow-hidden bg-brand-blue py-2 text-xs font-medium text-white sm:text-sm"
+                aria-label="Store announcements"
+            >
+                <p className="sr-only">{announcements.join('. ')}</p>
+                <div className="announcement-track" aria-hidden="true">
+                    {[0, 1].map((group) => (
+                        <div key={group} className="flex shrink-0 items-center">
+                            {announcements.map((announcement) => (
+                                <span
+                                    key={`${group}-${announcement}`}
+                                    className="flex shrink-0 items-center px-6 sm:px-10"
+                                >
+                                    <span className="mr-6 size-1.5 rounded-full bg-brand-yellow sm:mr-10" />
+                                    {announcement}
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
             </div>
             <header className="border-b border-slate-200 bg-white">
                 <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -39,29 +67,16 @@ export function StorefrontHeader() {
                     >
                         Byte<span className="text-brand-orange">Mart</span>
                     </Link>
-                    <form
-                        action="/shop"
-                        className="relative mx-auto hidden max-w-2xl flex-1 md:block"
-                    >
-                        <Search className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
-                        <input
-                            className="w-full rounded-full border border-slate-200 bg-slate-50 py-3 pr-5 pl-12 text-sm transition outline-none focus:border-brand-cyan focus:ring-3 focus:ring-brand-sky/60"
-                            placeholder="Search products, categories and brands"
-                            aria-label="Search products"
-                            name="q"
-                        />
-                    </form>
+                    <StorefrontSearch />
                     <div className="ml-auto flex items-center gap-1 sm:gap-2">
                         <Button
                             variant="ghost"
                             size="icon"
                             aria-label="Search"
                             className="md:hidden"
-                            asChild
+                            onClick={() => setMobileSearchOpen((open) => !open)}
                         >
-                            <Link href="/shop">
-                                <Search />
-                            </Link>
+                            <Search />
                         </Button>
                         <Button
                             variant="ghost"
@@ -92,6 +107,11 @@ export function StorefrontHeader() {
                         </Button>
                     </div>
                 </div>
+                {mobileSearchOpen && (
+                    <div className="px-4 pb-4 md:hidden">
+                        <StorefrontSearch className="block" />
+                    </div>
+                )}
                 <nav className="hidden border-t border-slate-100 lg:block">
                     <div className="mx-auto flex max-w-7xl items-center gap-8 px-8 py-3 text-sm font-semibold text-slate-700">
                         {navItems.map((item) => (

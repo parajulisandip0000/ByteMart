@@ -35,6 +35,7 @@ class ShopController extends Controller
     private function render(Request $request, ?Category $category = null, bool $dealsOnly = false): Response
     {
         $search = trim((string) $request->string('q'));
+        $brand = trim((string) $request->string('brand'));
         $sort = $request->string('sort')->value();
         $priceBounds = ProductVariant::query()
             ->where('is_default', true)
@@ -58,6 +59,10 @@ class ShopController extends Controller
                 'categories',
                 fn (Builder $categoryQuery) => $categoryQuery->whereKey($category->getKey()),
             ))
+            ->when($brand !== '', fn (Builder $query) => $query->whereHas(
+                'brand',
+                fn (Builder $brandQuery) => $brandQuery->where('slug', $brand)->where('is_active', true),
+            ))
             ->when($onSaleOnly, fn (Builder $query) => $query->whereHas(
                 'variants',
                 fn (Builder $variantQuery) => $variantQuery
@@ -72,7 +77,9 @@ class ShopController extends Controller
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $searchQuery) use ($search) {
                 $searchQuery
                     ->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('categories', fn (Builder $categoryQuery) => $categoryQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('brand', fn (Builder $brandQuery) => $brandQuery->where('name', 'like', "%{$search}%"));
             }))
             ->with($this->cardRelations())
             ->when($sort === 'price-low', fn (Builder $query) => $query->orderBy(
@@ -90,7 +97,7 @@ class ShopController extends Controller
                     ->limit(1),
             ))
             ->when(! in_array($sort, ['price-low', 'price-high'], true), fn (Builder $query) => $query->latest())
-            ->paginate(12)
+            ->paginate(4)
             ->withQueryString()
             ->through(fn (Product $product) => ProductCardResource::make($product)->resolve());
         $topRatedProducts = Product::query()
@@ -104,10 +111,11 @@ class ShopController extends Controller
             'categories' => CategoryResource::collection(
                 Category::query()->where('is_active', true)->whereNull('parent_id')->withCount('products')->orderBy('sort_order')->get(),
             )->resolve(),
-            'products' => $products,
+            'products' => Inertia::scroll($products),
             'topRatedProducts' => ProductCardResource::collection($topRatedProducts)->resolve(),
             'filters' => [
                 'q' => $search,
+                'brand' => $brand !== '' ? $brand : null,
                 'sort' => $sort,
                 'category' => $category?->slug,
                 'minPrice' => $selectedMinimumPrice,

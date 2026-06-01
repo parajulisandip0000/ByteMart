@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Storefront;
 
+use App\Models\Product;
 use App\Models\ProductVariant;
 use Database\Seeders\CatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,9 +29,20 @@ class CatalogPagesTest extends TestCase
                 ->component('storefront/shop')
                 ->where('pageTitle', 'Shop all products')
                 ->where('products.total', 8)
+                ->has('products.data', 4)
                 ->has('categories', 6)
                 ->has('topRatedProducts', 4)
                 ->where('topRatedProducts.0.slug', 'pulse-wireless-headphones')
+            );
+    }
+
+    public function test_shop_second_page_returns_the_next_product_batch(): void
+    {
+        $this->get(route('shop.index', ['page' => 2]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('products.current_page', 2)
+                ->has('products.data', 4)
             );
     }
 
@@ -54,6 +66,44 @@ class CatalogPagesTest extends TestCase
                 ->where('products.total', 1)
                 ->where('products.data.0.slug', 'everyday-canvas-sneakers')
             );
+    }
+
+    public function test_shop_search_matches_category_and_brand_names(): void
+    {
+        $this->get(route('shop.index', ['q' => 'Electronics']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('products.total', 2));
+
+        $this->get(route('shop.index', ['brand' => 'nova-tech']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.brand', 'nova-tech')
+                ->where('products.total', 1)
+                ->where('products.data.0.slug', 'nova-smart-watch')
+            );
+    }
+
+    public function test_search_suggestions_return_products_categories_and_brands(): void
+    {
+        $this->getJson(route('search.suggestions', ['q' => 'Nova']))
+            ->assertOk()
+            ->assertJsonPath('products.0.slug', 'nova-smart-watch')
+            ->assertJsonPath('brands.0.slug', 'nova-tech');
+
+        $this->getJson(route('search.suggestions', ['q' => 'Electronics']))
+            ->assertOk()
+            ->assertJsonPath('categories.0.slug', 'electronics');
+    }
+
+    public function test_search_suggestions_require_at_least_two_characters(): void
+    {
+        $this->getJson(route('search.suggestions', ['q' => 'N']))
+            ->assertOk()
+            ->assertExactJson([
+                'products' => [],
+                'categories' => [],
+                'brands' => [],
+            ]);
     }
 
     public function test_shop_price_range_filters_products(): void
@@ -108,9 +158,56 @@ class CatalogPagesTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('storefront/product')
                 ->where('product.name', 'Pulse Wireless Headphones')
+                ->where('product.brand', 'Pulse Audio')
+                ->where('product.brandSlug', 'pulse-audio')
+                ->where('product.category', 'Electronics')
+                ->where('product.shortDescription', 'A dependable ByteMart pick made for comfortable everyday use.')
+                ->where('product.rating.average', 5)
+                ->where('product.rating.count', 1)
+                ->has('product.reviews', 1)
                 ->where('product.variant.sku', 'ELEC-HEAD-001')
                 ->where('product.variant.price', '3499.00')
             );
+    }
+
+    public function test_customer_can_submit_a_product_review(): void
+    {
+        $product = Product::query()->where('slug', 'pulse-wireless-headphones')->firstOrFail();
+
+        $this->post(route('products.reviews.store', $product), [
+            'name' => 'Sandip Parajuli',
+            'email' => 'sandip@example.com',
+            'rating' => 4,
+            'comment' => 'The headphones sound clear and arrived in good condition.',
+        ])->assertRedirect(route('products.show', $product));
+
+        $this->assertDatabaseHas('product_reviews', [
+            'product_id' => $product->id,
+            'name' => 'Sandip Parajuli',
+            'email' => 'sandip@example.com',
+            'rating' => 4,
+        ]);
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('product.rating.average', 4.5)
+                ->where('product.rating.count', 2)
+                ->where('product.reviews.0.name', 'Sandip Parajuli')
+                ->missing('product.reviews.0.email')
+            );
+    }
+
+    public function test_product_review_submission_is_validated(): void
+    {
+        $product = Product::query()->where('slug', 'pulse-wireless-headphones')->firstOrFail();
+
+        $this->post(route('products.reviews.store', $product), [
+            'name' => '',
+            'email' => 'invalid-email',
+            'rating' => 6,
+            'comment' => 'short',
+        ])->assertSessionHasErrors(['name', 'email', 'rating', 'comment']);
     }
 
     public function test_categories_page_returns_all_categories(): void

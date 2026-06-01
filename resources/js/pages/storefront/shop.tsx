@@ -1,5 +1,13 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Filter, Grid2X2, List, SlidersHorizontal, Tag, X } from 'lucide-react';
+import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
+import {
+    Filter,
+    Grid2X2,
+    List,
+    LoaderCircle,
+    SlidersHorizontal,
+    Tag,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { StorefrontLayout } from '@/components/layout/storefront-layout';
@@ -15,6 +23,7 @@ interface ShopProps {
     topRatedProducts: Product[];
     filters: {
         q: string;
+        brand: string | null;
         sort: string;
         category: string | null;
         minPrice: number;
@@ -33,7 +42,7 @@ interface ShopProps {
 
 type FilterValues = Pick<
     ShopProps['filters'],
-    'q' | 'sort' | 'minPrice' | 'maxPrice' | 'inStock' | 'onSale'
+    'q' | 'brand' | 'sort' | 'minPrice' | 'maxPrice' | 'inStock' | 'onSale'
 >;
 
 export default function Shop({
@@ -67,6 +76,7 @@ export default function Shop({
 
     const params = (nextValues: FilterValues = values) => ({
         q: nextValues.q || undefined,
+        brand: nextValues.brand || undefined,
         sort: nextValues.sort || undefined,
         min_price:
             nextValues.minPrice > filterOptions.minPrice
@@ -91,6 +101,7 @@ export default function Shop({
     const resetFilters = () => {
         const resetValues = {
             q: '',
+            brand: null,
             sort: '',
             minPrice: filterOptions.minPrice,
             maxPrice: filterOptions.maxPrice,
@@ -362,7 +373,16 @@ export default function Shop({
                             </div>
 
                             {products.data.length > 0 ? (
-                                <div
+                                <InfiniteScroll
+                                    data="products"
+                                    buffer={300}
+                                    onlyNext
+                                    loading={
+                                        <div className="flex items-center justify-center gap-2 py-8 text-sm font-bold text-brand-blue">
+                                            <LoaderCircle className="size-5 animate-spin" />
+                                            Loading more products
+                                        </div>
+                                    }
                                     className={
                                         view === 'grid'
                                             ? 'grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4'
@@ -376,49 +396,10 @@ export default function Shop({
                                             view={view}
                                         />
                                     ))}
-                                </div>
+                                </InfiniteScroll>
                             ) : (
                                 <div className="rounded-2xl bg-white px-6 py-16 text-center text-slate-500">
                                     No products match your selected filters.
-                                </div>
-                            )}
-
-                            {products.links.length > 3 && (
-                                <div className="mt-8 flex flex-wrap justify-center gap-2">
-                                    {products.links.map((link, index) =>
-                                        link.url ? (
-                                            <Link
-                                                key={`${link.label}-${index}`}
-                                                href={link.url}
-                                                className={`rounded-lg px-3 py-2 text-sm font-bold ${link.active ? 'bg-brand-blue text-white' : 'bg-white text-slate-600 hover:text-brand-blue'}`}
-                                            >
-                                                {link.label
-                                                    .replace(
-                                                        '&laquo; Previous',
-                                                        'Previous',
-                                                    )
-                                                    .replace(
-                                                        'Next &raquo;',
-                                                        'Next',
-                                                    )}
-                                            </Link>
-                                        ) : (
-                                            <span
-                                                key={`${link.label}-${index}`}
-                                                className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-400"
-                                            >
-                                                {link.label
-                                                    .replace(
-                                                        '&laquo; Previous',
-                                                        'Previous',
-                                                    )
-                                                    .replace(
-                                                        'Next &raquo;',
-                                                        'Next',
-                                                    )}
-                                            </span>
-                                        ),
-                                    )}
                                 </div>
                             )}
                         </div>

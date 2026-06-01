@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'slug', 'description', 'is_active', 'is_featured'];
+    protected $fillable = ['brand_id', 'name', 'slug', 'short_description', 'description', 'is_active', 'is_featured'];
 
     protected function casts(): array
     {
@@ -31,6 +32,11 @@ class Product extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
@@ -39,5 +45,10 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
     }
 }

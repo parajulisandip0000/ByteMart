@@ -16,8 +16,10 @@ class ProductController extends Controller
         abort_unless($product->is_active, 404);
 
         $product->load([
+            'brand:id,name,slug',
             'categories:id,name,slug',
             'images' => fn ($query) => $query->orderByDesc('is_primary')->orderBy('sort_order'),
+            'reviews' => fn ($query) => $query->approved()->latest('id'),
             'variants' => fn ($query) => $query->orderByDesc('is_default'),
         ]);
 

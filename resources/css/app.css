@@ -154,6 +154,16 @@
 }
 
 @layer components {
+    .announcement-track {
+        display: flex;
+        width: max-content;
+        animation: announcement-scroll 34s linear infinite;
+    }
+
+    .group:hover .announcement-track {
+        animation-play-state: paused;
+    }
+
     .price-range-input {
         @apply pointer-events-none absolute inset-0 h-5 w-full appearance-none bg-transparent;
     }
@@ -173,5 +183,21 @@
 
     .price-range-input::-moz-range-thumb {
         @apply pointer-events-auto size-4 cursor-pointer rounded-full border-2 border-white bg-brand-blue shadow;
+    }
+}
+
+@keyframes announcement-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .announcement-track {
+        animation-play-state: paused;
     }
 }
