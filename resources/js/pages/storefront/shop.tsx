@@ -1,13 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Filter,
-    Grid2X2,
-    List,
-    Search,
-    SlidersHorizontal,
-    Tag,
-    X,
-} from 'lucide-react';
+import { Filter, Grid2X2, List, SlidersHorizontal, Tag, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { StorefrontLayout } from '@/components/layout/storefront-layout';
@@ -54,6 +46,15 @@ export default function Shop({
     const [filterPanelOpen, setFilterPanelOpen] = useState(false);
     const [view, setView] = useState<'grid' | 'list'>('grid');
     const [values, setValues] = useState<FilterValues>(filters);
+    const priceRange = filterOptions.maxPrice - filterOptions.minPrice;
+    const minimumPricePosition =
+        priceRange > 0
+            ? ((values.minPrice - filterOptions.minPrice) / priceRange) * 100
+            : 0;
+    const maximumPricePosition =
+        priceRange > 0
+            ? ((values.maxPrice - filterOptions.minPrice) / priceRange) * 100
+            : 100;
 
     const basePath = dealsOnly
         ? '/deals'
@@ -102,7 +103,7 @@ export default function Shop({
             <Head title={pageTitle} />
             <StorefrontLayout>
                 <section className="border-b border-blue-800 bg-brand-blue text-white">
-                    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[1536px] px-4 py-10 sm:px-6 lg:px-8">
                         <p className="text-xs font-black tracking-[0.2em] text-brand-yellow uppercase">
                             {dealsOnly
                                 ? 'Limited-time savings'
@@ -117,8 +118,8 @@ export default function Shop({
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    <div className="grid gap-7 lg:grid-cols-[270px_1fr]">
+                <section className="mx-auto max-w-[1536px] px-4 py-8 sm:px-6 lg:px-8">
+                    <div className="grid gap-7 lg:grid-cols-[290px_1fr]">
                         <aside
                             className={`${filterPanelOpen ? 'block' : 'hidden'} h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:block`}
                         >
@@ -135,6 +136,70 @@ export default function Shop({
                                 >
                                     <X className="size-5" />
                                 </button>
+                            </div>
+
+                            <div className="border-b border-slate-200 py-5">
+                                <h3 className="font-black text-slate-900">
+                                    Filter by price
+                                </h3>
+                                <div className="relative mt-6 h-5">
+                                    <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded-full bg-slate-200" />
+                                    <div
+                                        className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-brand-blue"
+                                        style={{
+                                            left: `${minimumPricePosition}%`,
+                                            right: `${100 - maximumPricePosition}%`,
+                                        }}
+                                    />
+                                    <input
+                                        type="range"
+                                        min={filterOptions.minPrice}
+                                        max={filterOptions.maxPrice}
+                                        step="100"
+                                        value={values.minPrice}
+                                        aria-label="Minimum price"
+                                        onChange={(event) =>
+                                            setValues({
+                                                ...values,
+                                                minPrice: Math.min(
+                                                    Number(event.target.value),
+                                                    values.maxPrice,
+                                                ),
+                                            })
+                                        }
+                                        className="price-range-input"
+                                    />
+                                    <input
+                                        type="range"
+                                        min={filterOptions.minPrice}
+                                        max={filterOptions.maxPrice}
+                                        step="100"
+                                        value={values.maxPrice}
+                                        aria-label="Maximum price"
+                                        onChange={(event) =>
+                                            setValues({
+                                                ...values,
+                                                maxPrice: Math.max(
+                                                    Number(event.target.value),
+                                                    values.minPrice,
+                                                ),
+                                            })
+                                        }
+                                        className="price-range-input"
+                                    />
+                                </div>
+                                <div className="mt-4 flex items-center justify-between text-sm font-bold text-brand-blue">
+                                    <span>{formatNpr(values.minPrice)}</span>
+                                    <span>{formatNpr(values.maxPrice)}</span>
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    className="mt-4 w-full bg-brand-blue"
+                                    onClick={() => applyFilters()}
+                                >
+                                    Filter price
+                                </Button>
                             </div>
 
                             <div className="border-b border-slate-200 py-5">
@@ -162,70 +227,6 @@ export default function Shop({
                                 </div>
                             </div>
 
-                            <div className="border-b border-slate-200 py-5">
-                                <h3 className="font-black text-slate-900">
-                                    Filter by price
-                                </h3>
-                                <div className="mt-4 grid gap-3">
-                                    <label className="grid gap-1 text-xs font-bold text-slate-500">
-                                        Minimum price
-                                        <input
-                                            type="range"
-                                            min={filterOptions.minPrice}
-                                            max={filterOptions.maxPrice}
-                                            step="100"
-                                            value={values.minPrice}
-                                            onChange={(event) =>
-                                                setValues({
-                                                    ...values,
-                                                    minPrice: Math.min(
-                                                        Number(
-                                                            event.target.value,
-                                                        ),
-                                                        values.maxPrice,
-                                                    ),
-                                                })
-                                            }
-                                            className="accent-brand-blue"
-                                        />
-                                    </label>
-                                    <label className="grid gap-1 text-xs font-bold text-slate-500">
-                                        Maximum price
-                                        <input
-                                            type="range"
-                                            min={filterOptions.minPrice}
-                                            max={filterOptions.maxPrice}
-                                            step="100"
-                                            value={values.maxPrice}
-                                            onChange={(event) =>
-                                                setValues({
-                                                    ...values,
-                                                    maxPrice: Math.max(
-                                                        Number(
-                                                            event.target.value,
-                                                        ),
-                                                        values.minPrice,
-                                                    ),
-                                                })
-                                            }
-                                            className="accent-brand-blue"
-                                        />
-                                    </label>
-                                </div>
-                                <div className="mt-4 flex items-center justify-between text-sm font-bold text-brand-blue">
-                                    <span>{formatNpr(values.minPrice)}</span>
-                                    <span>{formatNpr(values.maxPrice)}</span>
-                                </div>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    className="mt-4 w-full bg-brand-blue"
-                                    onClick={() => applyFilters()}
-                                >
-                                    Filter price
-                                </Button>
-                            </div>
-
                             <div className="pt-5">
                                 <button
                                     type="button"
@@ -238,33 +239,6 @@ export default function Shop({
                         </aside>
 
                         <div>
-                            <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <form
-                                    onSubmit={(event) => {
-                                        event.preventDefault();
-                                        applyFilters();
-                                    }}
-                                    className="relative"
-                                >
-                                    <Search className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        value={values.q}
-                                        onChange={(event) =>
-                                            setValues({
-                                                ...values,
-                                                q: event.target.value,
-                                            })
-                                        }
-                                        className="w-full rounded-xl border border-slate-200 py-2.5 pr-24 pl-11 text-sm outline-none focus:border-brand-cyan"
-                                        placeholder="Search products"
-                                        aria-label="Search products"
-                                    />
-                                    <Button className="absolute top-1/2 right-1 -translate-y-1/2 rounded-lg bg-brand-blue">
-                                        Search
-                                    </Button>
-                                </form>
-                            </div>
-
                             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <div className="flex flex-wrap items-center gap-4">
                                     <Button
