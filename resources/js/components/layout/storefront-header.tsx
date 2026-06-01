@@ -40,9 +40,9 @@ export function StorefrontHeader() {
                             {announcements.map((announcement) => (
                                 <span
                                     key={`${group}-${announcement}`}
-                                    className="flex shrink-0 items-center px-6 sm:px-10"
+                                    className="flex shrink-0 items-center px-4 sm:px-6"
                                 >
-                                    <span className="mr-6 size-1.5 rounded-full bg-brand-yellow sm:mr-10" />
+                                    <span className="mr-3 size-1.5 rounded-full bg-brand-yellow sm:mr-4" />
                                     {announcement}
                                 </span>
                             ))}
