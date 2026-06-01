@@ -32,13 +32,13 @@ copy .env.example .env
 php artisan key:generate
 ```
 
-Create a database named `naya_mart`, then configure the database values in `.env`.
+Create a database named `bytemart`, then configure the database values in `.env`.
 
 ```env
 DB_CONNECTION=mariadb
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=naya_mart
+DB_DATABASE=bytemart
 DB_USERNAME=root
 DB_PASSWORD=
 ```
