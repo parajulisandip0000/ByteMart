@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react';
 
 export function StorefrontFooter() {
@@ -16,10 +17,18 @@ export function StorefrontFooter() {
                 <div>
                     <p className="font-bold">Quick links</p>
                     <div className="mt-3 grid gap-2 text-sm text-blue-100">
-                        <span>Shop products</span>
-                        <span>About ByteMart</span>
-                        <span>Delivery information</span>
-                        <span>Returns & support</span>
+                        <Link href="/shop" className="hover:text-white">
+                            Shop products
+                        </Link>
+                        <Link href="/about" className="hover:text-white">
+                            About ByteMart
+                        </Link>
+                        <Link href="/delivery" className="hover:text-white">
+                            Delivery information
+                        </Link>
+                        <Link href="/returns" className="hover:text-white">
+                            Returns & support
+                        </Link>
                     </div>
                 </div>
                 <div>

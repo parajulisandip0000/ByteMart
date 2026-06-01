@@ -1,11 +1,23 @@
-import { Link } from '@inertiajs/react';
-import { Heart, Menu, Search, ShoppingBag, UserRound } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { Heart, Menu, Search, ShoppingBag, UserRound, X } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-const navItems = ['Home', 'Shop', 'Categories', 'Deals', 'About us'];
+const navItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Shop', href: '/shop' },
+    { label: 'Categories', href: '/categories' },
+    { label: 'Deals', href: '/deals' },
+    { label: 'About us', href: '/about' },
+];
 
 export function StorefrontHeader() {
+    const { url } = usePage();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const isActive = (href: string) =>
+        href === '/' ? url === '/' : url.startsWith(href);
+
     return (
         <>
             <div className="bg-brand-blue px-4 py-2 text-center text-xs font-medium text-white sm:text-sm">
@@ -18,8 +30,9 @@ export function StorefrontHeader() {
                         size="icon"
                         className="lg:hidden"
                         aria-label="Open navigation"
+                        onClick={() => setMenuOpen((open) => !open)}
                     >
-                        <Menu />
+                        {menuOpen ? <X /> : <Menu />}
                     </Button>
                     <Link
                         href="/"
@@ -27,22 +40,29 @@ export function StorefrontHeader() {
                     >
                         Byte<span className="text-brand-orange">Mart</span>
                     </Link>
-                    <div className="relative mx-auto hidden max-w-2xl flex-1 md:block">
+                    <form
+                        action="/shop"
+                        className="relative mx-auto hidden max-w-2xl flex-1 md:block"
+                    >
                         <Search className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
                         <input
                             className="w-full rounded-full border border-slate-200 bg-slate-50 py-3 pr-5 pl-12 text-sm transition outline-none focus:border-brand-cyan focus:ring-3 focus:ring-brand-sky/60"
                             placeholder="Search products, categories and brands"
                             aria-label="Search products"
+                            name="q"
                         />
-                    </div>
+                    </form>
                     <div className="ml-auto flex items-center gap-1 sm:gap-2">
                         <Button
                             variant="ghost"
                             size="icon"
                             aria-label="Search"
                             className="md:hidden"
+                            asChild
                         >
-                            <Search />
+                            <Link href="/shop">
+                                <Search />
+                            </Link>
                         </Button>
                         <Button
                             variant="ghost"
@@ -75,19 +95,43 @@ export function StorefrontHeader() {
                 </div>
                 <nav className="hidden border-t border-slate-100 lg:block">
                     <div className="mx-auto flex max-w-7xl items-center gap-8 px-8 py-3 text-sm font-semibold text-slate-700">
-                        {navItems.map((item, index) => (
-                            <span
-                                className={index === 0 ? 'text-brand-blue' : ''}
-                                key={item}
+                        {navItems.map((item) => (
+                            <Link
+                                href={item.href}
+                                className={
+                                    isActive(item.href)
+                                        ? 'text-brand-blue'
+                                        : 'transition hover:text-brand-blue'
+                                }
+                                key={item.href}
                             >
-                                {item}
-                            </span>
+                                {item.label}
+                            </Link>
                         ))}
-                        <span className="ml-auto font-bold text-brand-orange">
+                        <Link
+                            href="/deals"
+                            className="ml-auto font-bold text-brand-orange"
+                        >
                             Weekend Deals
-                        </span>
+                        </Link>
                     </div>
                 </nav>
+                {menuOpen && (
+                    <nav className="border-t border-slate-100 bg-white px-4 py-3 lg:hidden">
+                        <div className="grid gap-1">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setMenuOpen(false)}
+                                    className={`rounded-lg px-3 py-2 text-sm font-semibold ${isActive(item.href) ? 'bg-brand-sky/50 text-brand-blue' : 'text-slate-700 hover:bg-slate-50'}`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </nav>
+                )}
             </header>
         </>
     );

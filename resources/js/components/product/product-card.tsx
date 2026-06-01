@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { Heart, ShoppingBag } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,15 @@ export function ProductCard({ product }: { product: Product }) {
     return (
         <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:shadow-xl">
             <div className="relative aspect-square overflow-hidden bg-slate-100">
-                {product.imageUrl && (
-                    <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="size-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                )}
+                <Link href={`/products/${product.slug}`}>
+                    {product.imageUrl && (
+                        <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="size-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                    )}
+                </Link>
                 {discount && (
                     <span className="absolute top-3 left-3 rounded-full bg-brand-orange px-2.5 py-1 text-xs font-extrabold text-white">
                         -{discount}%
@@ -40,9 +43,11 @@ export function ProductCard({ product }: { product: Product }) {
                 <p className="text-xs font-bold tracking-wide text-brand-cyan uppercase">
                     {product.category}
                 </p>
-                <h3 className="mt-1 min-h-12 font-bold text-slate-900">
-                    {product.name}
-                </h3>
+                <Link href={`/products/${product.slug}`}>
+                    <h3 className="mt-1 min-h-12 font-bold text-slate-900 transition hover:text-brand-blue">
+                        {product.name}
+                    </h3>
+                </Link>
                 <div className="mt-3 flex items-end justify-between gap-2">
                     <div>
                         <p className="font-black text-brand-blue">

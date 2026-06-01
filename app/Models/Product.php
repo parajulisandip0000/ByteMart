@@ -16,6 +16,11 @@ class Product extends Model
         return ['is_active' => 'boolean', 'is_featured' => 'boolean'];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

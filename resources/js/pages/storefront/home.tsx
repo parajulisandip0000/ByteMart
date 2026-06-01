@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowRight,
     BadgeCheck,
@@ -69,15 +69,19 @@ export default function Home({ categories, featuredProducts }: HomeProps) {
                                 <Button
                                     size="lg"
                                     className="rounded-full bg-brand-orange px-7 font-bold"
+                                    asChild
                                 >
-                                    Shop collection <ArrowRight />
+                                    <Link href="/shop">
+                                        Shop collection <ArrowRight />
+                                    </Link>
                                 </Button>
                                 <Button
                                     size="lg"
                                     variant="outline"
                                     className="rounded-full border-brand-blue px-7 font-bold text-brand-blue"
+                                    asChild
                                 >
-                                    Explore deals
+                                    <Link href="/deals">Explore deals</Link>
                                 </Button>
                             </div>
                             <div className="mt-8 flex gap-7 text-sm">
@@ -135,8 +139,9 @@ export default function Home({ categories, featuredProducts }: HomeProps) {
                     />
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                         {categories.map((category) => (
-                            <article
+                            <Link
                                 key={category.id}
+                                href={`/categories/${category.slug}`}
                                 className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                             >
                                 {category.imageUrl && (
@@ -149,7 +154,7 @@ export default function Home({ categories, featuredProducts }: HomeProps) {
                                 <p className="p-3 text-center text-sm font-bold text-slate-800">
                                     {category.name}
                                 </p>
-                            </article>
+                            </Link>
                         ))}
                     </div>
                 </section>
@@ -164,8 +169,11 @@ export default function Home({ categories, featuredProducts }: HomeProps) {
                         <Button
                             variant="ghost"
                             className="mb-7 hidden font-bold text-brand-blue sm:flex"
+                            asChild
                         >
-                            View all <ArrowRight />
+                            <Link href="/shop">
+                                View all <ArrowRight />
+                            </Link>
                         </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-6">
@@ -194,8 +202,11 @@ export default function Home({ categories, featuredProducts }: HomeProps) {
                             <Button
                                 size="lg"
                                 className="rounded-full bg-brand-yellow px-7 font-bold text-brand-blue hover:bg-yellow-300"
+                                asChild
                             >
-                                Discover deals <ArrowRight />
+                                <Link href="/deals">
+                                    Discover deals <ArrowRight />
+                                </Link>
                             </Button>
                         </div>
                     </div>
