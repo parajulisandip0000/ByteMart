@@ -130,9 +130,11 @@ export default function Cart() {
                                 <Button
                                     className="mt-6 w-full bg-brand-orange font-bold"
                                     size="lg"
-                                    disabled
+                                    asChild
                                 >
-                                    Checkout coming next
+                                    <Link href="/checkout">
+                                        Proceed to checkout
+                                    </Link>
                                 </Button>
                                 <Link
                                     href="/shop"

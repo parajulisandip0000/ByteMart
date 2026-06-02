@@ -16,6 +16,7 @@ Route::get('/categories/{category}', [ShopController::class, 'category'])->name(
 Route::get('/deals', [ShopController::class, 'deals'])->name('deals.index');
 Route::inertia('/cart', 'storefront/cart')->name('cart.index');
 Route::inertia('/wishlist', 'storefront/wishlist')->name('wishlist.index');
+Route::inertia('/checkout', 'storefront/checkout')->name('checkout.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])->name('products.reviews.store');
 Route::get('/search/suggestions', SearchSuggestionController::class)->name('search.suggestions');

@@ -221,7 +221,7 @@ class CatalogPagesTest extends TestCase
             );
     }
 
-    public function test_cart_and_wishlist_pages_are_available(): void
+    public function test_cart_wishlist_and_checkout_pages_are_available(): void
     {
         $this->get(route('cart.index'))
             ->assertOk()
@@ -230,6 +230,10 @@ class CatalogPagesTest extends TestCase
         $this->get(route('wishlist.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('storefront/wishlist'));
+
+        $this->get(route('checkout.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('storefront/checkout'));
     }
 
     #[DataProvider('contentPages')]
