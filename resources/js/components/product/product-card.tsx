@@ -2,6 +2,11 @@ import { Link } from '@inertiajs/react';
 import { Heart, ShoppingBag } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { formatNpr } from '@/lib/currency';
 import {
     productToStorefrontItem,
@@ -56,21 +61,30 @@ export function ProductCard({
                         -{discount}%
                     </span>
                 )}
-                <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute top-3 right-3 rounded-full bg-white/90"
-                    aria-label={`Add ${product.name} to wishlist`}
-                    onClick={() => wishlist.toggleItem(storefrontItem)}
-                >
-                    <Heart
-                        className={
-                            wishlisted
-                                ? 'fill-brand-orange text-brand-orange'
-                                : ''
-                        }
-                    />
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className="absolute top-3 right-3 rounded-full bg-white/90"
+                            aria-label={`${wishlisted ? 'Remove' : 'Add'} ${product.name} ${wishlisted ? 'from' : 'to'} wishlist`}
+                            onClick={() => wishlist.toggleItem(storefrontItem)}
+                        >
+                            <Heart
+                                className={
+                                    wishlisted
+                                        ? 'fill-brand-orange text-brand-orange'
+                                        : ''
+                                }
+                            />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {wishlisted
+                            ? 'Remove from wishlist'
+                            : 'Add to wishlist'}
+                    </TooltipContent>
+                </Tooltip>
             </div>
             <div className={cn('p-4', view === 'list' && 'flex-1 sm:p-6')}>
                 <p className="text-xs font-bold tracking-wide text-brand-cyan uppercase">
@@ -97,15 +111,22 @@ export function ProductCard({
                             </p>
                         )}
                     </div>
-                    <Button
-                        size="icon"
-                        className="rounded-full bg-brand-blue"
-                        aria-label={`Add ${product.name} to cart`}
-                        disabled={!product.inStock}
-                        onClick={() => cart.addItem(storefrontItem)}
-                    >
-                        <ShoppingBag />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="icon"
+                                className="rounded-full bg-brand-blue"
+                                aria-label={`Add ${product.name} to cart`}
+                                disabled={!product.inStock}
+                                onClick={() => cart.addItem(storefrontItem)}
+                            >
+                                <ShoppingBag />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {product.inStock ? 'Add to cart' : 'Out of stock'}
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </div>
         </article>

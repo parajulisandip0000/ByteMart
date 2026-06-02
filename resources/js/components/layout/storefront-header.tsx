@@ -4,6 +4,11 @@ import { useState } from 'react';
 
 import { StorefrontSearch } from '@/components/layout/storefront-search';
 import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useCart, useWishlist } from '@/lib/storefront-storage';
 
 const navItems = [
@@ -72,50 +77,60 @@ export function StorefrontHeader() {
                     </Link>
                     <StorefrontSearch />
                     <div className="ml-auto flex items-center gap-1 sm:gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Search"
-                            className="md:hidden"
-                            onClick={() => setMobileSearchOpen((open) => !open)}
-                        >
-                            <Search />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Wishlist"
-                            className="relative"
-                            asChild
-                        >
-                            <Link href="/wishlist">
-                                <Heart />
-                                {wishlist.itemCount > 0 && (
-                                    <ItemCount count={wishlist.itemCount} />
-                                )}
-                            </Link>
-                        </Button>
-                        <Link href="/login">
+                        <HeaderTooltip label="Search">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                aria-label="Account"
+                                aria-label="Search"
+                                className="md:hidden"
+                                onClick={() =>
+                                    setMobileSearchOpen((open) => !open)
+                                }
                             >
-                                <UserRound />
+                                <Search />
                             </Button>
-                        </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Cart"
-                            className="relative"
-                            asChild
-                        >
-                            <Link href="/cart">
-                                <ShoppingBag />
-                                <ItemCount count={cart.itemCount} />
+                        </HeaderTooltip>
+                        <HeaderTooltip label="Wishlist">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Wishlist"
+                                className="relative"
+                                asChild
+                            >
+                                <Link href="/wishlist">
+                                    <Heart />
+                                    {wishlist.itemCount > 0 && (
+                                        <ItemCount count={wishlist.itemCount} />
+                                    )}
+                                </Link>
+                            </Button>
+                        </HeaderTooltip>
+                        <HeaderTooltip label="Account">
+                            <Link href="/login">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Account"
+                                >
+                                    <UserRound />
+                                </Button>
                             </Link>
-                        </Button>
+                        </HeaderTooltip>
+                        <HeaderTooltip label="Cart">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Cart"
+                                className="relative"
+                                asChild
+                            >
+                                <Link href="/cart">
+                                    <ShoppingBag />
+                                    <ItemCount count={cart.itemCount} />
+                                </Link>
+                            </Button>
+                        </HeaderTooltip>
                     </div>
                 </div>
                 {mobileSearchOpen && (
@@ -172,5 +187,20 @@ function ItemCount({ count }: { count: number }) {
         <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-orange text-[10px] font-bold text-white">
             {count > 9 ? '9+' : count}
         </span>
+    );
+}
+
+function HeaderTooltip({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>{children}</TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
     );
 }

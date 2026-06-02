@@ -2,7 +2,9 @@ import { Head, Link } from '@inertiajs/react';
 import {
     CreditCard,
     MapPin,
+    Minus,
     PackageCheck,
+    Plus,
     ShieldCheck,
     ShoppingBag,
     Truck,
@@ -223,6 +225,7 @@ export default function Checkout() {
                                 deliveryFee={deliveryFee}
                                 total={total}
                                 items={cart.items}
+                                setQuantity={cart.setQuantity}
                             />
                         </form>
                     ) : (
@@ -330,11 +333,13 @@ function OrderSummary({
     deliveryFee,
     total,
     items,
+    setQuantity,
 }: {
     subtotal: number;
     deliveryFee: number;
     total: number;
     items: ReturnType<typeof useCart>['items'];
+    setQuantity: ReturnType<typeof useCart>['setQuantity'];
 }) {
     return (
         <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-4">
@@ -347,14 +352,37 @@ function OrderSummary({
                             alt={item.name}
                             className="size-14 rounded-lg bg-slate-100 object-cover"
                         />
-                        <p className="min-w-0 flex-1 text-sm">
+                        <div className="min-w-0 flex-1 text-sm">
                             <strong className="line-clamp-2 block text-slate-800">
                                 {item.name}
                             </strong>
-                            <span className="mt-1 block text-slate-500">
-                                Qty: {item.quantity}
-                            </span>
-                        </p>
+                            <div className="mt-2 flex w-fit items-center rounded-full border border-slate-200">
+                                <button
+                                    type="button"
+                                    aria-label={`Decrease ${item.name} quantity`}
+                                    onClick={() =>
+                                        setQuantity(item.id, item.quantity - 1)
+                                    }
+                                    disabled={item.quantity === 1}
+                                    className="p-1.5 text-slate-600 hover:text-brand-blue disabled:cursor-not-allowed disabled:text-slate-300"
+                                >
+                                    <Minus className="size-3" />
+                                </button>
+                                <span className="min-w-7 text-center text-xs font-black">
+                                    {item.quantity}
+                                </span>
+                                <button
+                                    type="button"
+                                    aria-label={`Increase ${item.name} quantity`}
+                                    onClick={() =>
+                                        setQuantity(item.id, item.quantity + 1)
+                                    }
+                                    className="p-1.5 text-slate-600 hover:text-brand-blue"
+                                >
+                                    <Plus className="size-3" />
+                                </button>
+                            </div>
+                        </div>
                         <strong className="text-sm text-brand-blue">
                             {formatNpr(Number(item.price) * item.quantity)}
                         </strong>
@@ -382,7 +410,7 @@ function OrderSummary({
                 size="lg"
                 className="mt-6 w-full bg-brand-orange font-bold hover:bg-orange-600"
             >
-                <ShieldCheck /> Place COD order
+                <ShieldCheck /> Place order
             </Button>
             <p className="mt-3 text-center text-xs leading-5 text-slate-500">
                 Your details are used only to process this order.
