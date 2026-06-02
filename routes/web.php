@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\AuthenticatedSessionController as AdminAuthenticatedSessionController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\CustomerActivityLogController as AdminCustomerActivityLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -59,6 +60,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::patch('reviews/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
     Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::get('logs', [AdminActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('customer-logs', [AdminCustomerActivityLogController::class, 'index'])->name('customer-logs.index');
 });
 
 require __DIR__.'/settings.php';

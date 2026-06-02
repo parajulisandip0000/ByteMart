@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\Product;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -67,6 +68,15 @@ class OrderController extends Controller
 
             return $order->load('items');
         });
+        ActivityLogger::log(
+            $request,
+            'order.placed',
+            "Placed order {$order->reference}.",
+            $order,
+            actorType: $request->user() ? 'customer' : 'guest',
+            actorName: $order->customer_name,
+            actorEmail: $order->email,
+        );
 
         return response()->json([
             'order' => [

@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ImageUp, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -141,20 +141,53 @@ export default function CategoriesIndex({
                             form.setData('sort_order', Number(value))
                         }
                     />
-                    <label className="mt-4 block text-sm font-bold">
-                        Category image
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(event) =>
-                                form.setData(
-                                    'image',
-                                    event.target.files?.[0] ?? null,
-                                )
-                            }
-                            className="mt-2 block w-full text-sm font-normal"
-                        />
-                    </label>
+                    <div className="mt-4">
+                        <p className="text-sm font-bold">Category image</p>
+                        <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-brand-cyan bg-brand-sky/20 p-3 transition hover:bg-brand-sky/40">
+                            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-white text-brand-blue shadow-sm">
+                                <ImageUp className="size-5" />
+                            </span>
+                            <span className="min-w-0">
+                                <strong className="block text-sm text-brand-blue">
+                                    {form.data.image
+                                        ? 'Change selected image'
+                                        : 'Choose category image'}
+                                </strong>
+                                <span className="mt-0.5 block truncate text-xs font-normal text-slate-500">
+                                    {form.data.image?.name ??
+                                        (editing?.imageUrl
+                                            ? 'Current image will stay unless you select a replacement.'
+                                            : 'PNG, JPG or WEBP up to 4 MB.')}
+                                </span>
+                            </span>
+                            <span className="sr-only">
+                                Browse files from your computer
+                            </span>
+                            <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'image',
+                                        event.target.files?.[0] ?? null,
+                                    )
+                                }
+                                className="sr-only"
+                            />
+                        </label>
+                        {form.errors.image && (
+                            <span className="mt-1 block text-xs text-red-600">
+                                {form.errors.image}
+                            </span>
+                        )}
+                        {editing?.imageUrl && !form.data.image && (
+                            <img
+                                src={editing.imageUrl}
+                                alt={`${editing.name} current category`}
+                                className="mt-3 size-16 rounded-lg border border-slate-200 object-cover"
+                            />
+                        )}
+                    </div>
                     <label className="mt-4 flex gap-2 text-sm font-bold">
                         <input
                             type="checkbox"

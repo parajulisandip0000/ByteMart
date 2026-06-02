@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Support\ActivityLogger;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+        ActivityLogger::log($request, 'profile.updated', 'Updated customer profile.', $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 

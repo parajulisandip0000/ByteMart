@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 'orders' => Order::count(),
             ],
             'recentLogs' => ActivityLog::with('user:id,name')
+                ->where('actor_type', 'admin')
                 ->latest()
                 ->limit(8)
                 ->get()

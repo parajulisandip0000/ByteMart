@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -35,8 +36,10 @@ class CategoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
-        $category = Category::create($this->categoryData($data, $request));
-        ActivityLogger::log($request, 'category.created', "Created category {$category->name}.", $category);
+        DB::transaction(function () use ($data, $request) {
+            $category = Category::create($this->categoryData($data, $request));
+            ActivityLogger::log($request, 'category.created', "Created category {$category->name}.", $category);
+        });
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category created successfully.']);
 
         return back();
@@ -45,8 +48,10 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category): RedirectResponse
     {
         $data = $this->validated($request, $category);
-        $category->update($this->categoryData($data, $request, $category));
-        ActivityLogger::log($request, 'category.updated', "Updated category {$category->name}.", $category);
+        DB::transaction(function () use ($data, $request, $category) {
+            $category->update($this->categoryData($data, $request, $category));
+            ActivityLogger::log($request, 'category.updated', "Updated category {$category->name}.", $category);
+        });
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category updated successfully.']);
 
         return back();
@@ -56,8 +61,10 @@ class CategoryController extends Controller
     {
         abort_if($category->products()->exists(), 422, 'Remove products from this category before deleting it.');
         $name = $category->name;
-        $category->delete();
-        ActivityLogger::log($request, 'category.deleted', "Deleted category {$name}.");
+        DB::transaction(function () use ($request, $category, $name) {
+            $category->delete();
+            ActivityLogger::log($request, 'category.deleted', "Deleted category {$name}.");
+        });
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category deleted successfully.']);
 
         return back();

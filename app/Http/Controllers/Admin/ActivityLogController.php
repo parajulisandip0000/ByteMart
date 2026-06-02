@@ -12,7 +12,7 @@ class ActivityLogController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/logs/index', [
-            'logs' => ActivityLog::with('user:id,name,email')->latest()->paginate(25)->through(fn (ActivityLog $log) => [
+            'logs' => ActivityLog::where('actor_type', 'admin')->with('user:id,name,email')->latest()->paginate(25)->through(fn (ActivityLog $log) => [
                 'id' => $log->id,
                 'action' => $log->action,
                 'description' => $log->description,

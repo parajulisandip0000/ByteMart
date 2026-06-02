@@ -52,6 +52,11 @@ class CheckoutOrderTest extends TestCase
             'subtotal' => 3000,
             'total' => 3000,
         ]);
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'order.placed',
+            'actor_type' => 'guest',
+            'actor_email' => 'customer@example.com',
+        ]);
         $this->assertSame(3, $variant->fresh()->stock_quantity);
     }
 

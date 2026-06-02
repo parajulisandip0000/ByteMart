@@ -10,6 +10,7 @@ import {
     ShoppingBag,
     Store,
     Users,
+    ScrollText,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -23,6 +24,7 @@ const navigation = [
     { label: 'Customers', href: '/admin/users', icon: Users },
     { label: 'Reviews', href: '/admin/reviews', icon: MessageSquareText },
     { label: 'Activity logs', href: '/admin/logs', icon: Activity },
+    { label: 'Customer logs', href: '/admin/customer-logs', icon: ScrollText },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

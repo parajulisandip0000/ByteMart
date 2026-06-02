@@ -38,6 +38,16 @@ class AdminPortalTest extends TestCase
                 ->has('metrics'));
     }
 
+    public function test_admin_can_view_customer_logs(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('admin.customer-logs.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/customer-logs/index')
+                ->has('logs'));
+    }
+
     public function test_admin_can_create_product_with_uploaded_image(): void
     {
         Storage::fake('public');
