@@ -125,4 +125,79 @@ class AdminPortalTest extends TestCase
         $this->assertSame('admin', $customer->fresh()->role);
         $this->assertTrue(ActivityLog::where('action', 'user.role_updated')->exists());
     }
+
+    public function test_manager_can_access_admin_portal(): void
+    {
+        $manager = User::factory()->create(['role' => 'manager']);
+
+        $this->actingAs($manager)
+            ->get(route('admin.dashboard'))
+            ->assertOk();
+    }
+
+    public function test_inactive_user_cannot_login(): void
+    {
+        $user = User::factory()->create(['is_active' => false]);
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors();
+
+        $admin = User::factory()->admin()->create(['is_active' => false]);
+
+        $this->post(route('admin.login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors();
+    }
+
+    public function test_inactive_user_is_logged_out_on_next_request(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk();
+
+        $admin->update(['is_active' => false]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertRedirect(route('admin.login'))
+            ->assertSessionHasErrors('email');
+
+        $customer = User::factory()->create();
+        $this->actingAs($customer)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $customer->update(['is_active' => false]);
+
+        $this->actingAs($customer)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_admin_cannot_deactivate_self(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $admin), ['is_active' => false])
+            ->assertStatus(422);
+
+        $this->assertTrue($admin->fresh()->is_active);
+    }
+
+    public function test_admin_cannot_demote_self(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $admin), ['role' => 'customer'])
+            ->assertStatus(422);
+
+        $this->assertSame('admin', $admin->fresh()->role);
+    }
 }

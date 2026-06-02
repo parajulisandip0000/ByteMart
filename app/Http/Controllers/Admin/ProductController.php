@@ -46,13 +46,32 @@ class ProductController extends Controller
     {
         $data = $this->validated($request);
 
-        $product = DB::transaction(function () use ($data, $request) {
+        $product = DB::transaction(function () use (&$data, $request) {
+            if (isset($data['brand_id']) && $data['brand_id'] === 'new' && !empty($data['brand_name'])) {
+                $brand = Brand::firstOrCreate(
+                    ['name' => $data['brand_name']],
+                    ['slug' => Str::slug($data['brand_name']), 'is_active' => true]
+                );
+                $data['brand_id'] = $brand->id;
+            }
+
             $product = Product::create($this->productData($data));
             $product->categories()->sync($data['category_ids']);
             $product->variants()->create($this->variantData($data));
 
             if ($request->hasFile('image')) {
                 $this->storeImage($product, $request);
+            }
+
+            if ($request->hasFile('gallery_images')) {
+                foreach ($request->file('gallery_images') as $file) {
+                    $path = $file->store('products', 'public');
+                    $product->images()->create([
+                        'url' => Storage::url($path),
+                        'alt_text' => $product->name,
+                        'is_primary' => false,
+                    ]);
+                }
             }
 
             return $product;
@@ -84,7 +103,11 @@ class ProductController extends Controller
                 'price' => $variant?->price ?? '',
                 'compareAtPrice' => $variant?->compare_at_price ?? '',
                 'stockQuantity' => $variant?->stock_quantity ?? 0,
-                'imageUrl' => $product->images->first()?->url,
+                'imageUrl' => $product->images->where('is_primary', true)->first()?->url,
+                'gallery' => $product->images->where('is_primary', false)->map(fn ($img) => [
+                    'id' => $img->id,
+                    'url' => $img->url,
+                ])->values(),
             ],
             ...$this->formOptions(),
         ]);
@@ -94,14 +117,52 @@ class ProductController extends Controller
     {
         $data = $this->validated($request, $product);
 
-        DB::transaction(function () use ($data, $request, $product) {
+        DB::transaction(function () use (&$data, $request, $product) {
+            if (isset($data['brand_id']) && $data['brand_id'] === 'new' && !empty($data['brand_name'])) {
+                $brand = Brand::firstOrCreate(
+                    ['name' => $data['brand_name']],
+                    ['slug' => Str::slug($data['brand_name']), 'is_active' => true]
+                );
+                $data['brand_id'] = $brand->id;
+            }
+
             $product->update($this->productData($data));
             $product->categories()->sync($data['category_ids']);
             $product->variants()->updateOrCreate(['is_default' => true], $this->variantData($data));
 
             if ($request->hasFile('image')) {
-                $this->deleteImages($product);
+                $primaryImage = $product->images()->where('is_primary', true)->first();
+                if ($primaryImage) {
+                    if (Str::startsWith($primaryImage->url, '/storage/')) {
+                        Storage::disk('public')->delete(Str::after($primaryImage->url, '/storage/'));
+                    }
+                    $primaryImage->delete();
+                }
                 $this->storeImage($product, $request);
+            }
+
+            if ($request->has('deleted_image_ids')) {
+                $deletedIds = $request->input('deleted_image_ids');
+                if (is_array($deletedIds)) {
+                    $imagesToDelete = $product->images()->whereIn('id', $deletedIds)->get();
+                    foreach ($imagesToDelete as $img) {
+                        if (Str::startsWith($img->url, '/storage/')) {
+                            Storage::disk('public')->delete(Str::after($img->url, '/storage/'));
+                        }
+                        $img->delete();
+                    }
+                }
+            }
+
+            if ($request->hasFile('gallery_images')) {
+                foreach ($request->file('gallery_images') as $file) {
+                    $path = $file->store('products', 'public');
+                    $product->images()->create([
+                        'url' => Storage::url($path),
+                        'alt_text' => $product->name,
+                        'is_primary' => false,
+                    ]);
+                }
             }
         });
 
@@ -130,18 +191,25 @@ class ProductController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('products')->ignore($product)],
-            'brand_id' => ['nullable', 'exists:brands,id'],
+            'brand_id' => ['nullable', 'string'],
+            'brand_name' => ['nullable', 'required_if:brand_id,new', 'string', 'max:255'],
             'category_ids' => ['required', 'array', 'min:1'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
             'short_description' => ['required', 'string', 'max:1000'],
             'description' => ['required', 'string'],
             'sku' => ['required', 'string', 'max:255', Rule::unique('product_variants')->ignore($variant)],
             'price' => ['required', 'numeric', 'min:0'],
-            'compare_at_price' => ['nullable', 'numeric', 'gte:price'],
+            'compare_at_price' => ['nullable', 'numeric', 'gt:price'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
             'image' => [$product ? 'nullable' : 'required', 'image', 'max:4096'],
+            'gallery_images' => ['nullable', 'array'],
+            'gallery_images.*' => ['image', 'max:4096'],
+            'deleted_image_ids' => ['nullable', 'array'],
+            'deleted_image_ids.*' => ['integer', 'exists:product_images,id'],
+        ], [
+            'compare_at_price.gt' => 'The original price must be greater than the sale price.',
         ]);
     }
 
@@ -150,7 +218,7 @@ class ProductController extends Controller
         return [
             'name' => $data['name'],
             'slug' => $data['slug'] ?: Str::slug($data['name']),
-            'brand_id' => $data['brand_id'] ?? null,
+            'brand_id' => (isset($data['brand_id']) && $data['brand_id'] && $data['brand_id'] !== 'new') ? (int) $data['brand_id'] : null,
             'short_description' => $data['short_description'],
             'description' => $data['description'],
             'is_active' => $data['is_active'] ?? false,

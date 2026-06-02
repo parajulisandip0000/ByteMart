@@ -47,6 +47,7 @@ export default function ProductPage({
     const [activeTab, setActiveTab] = useState<'description' | 'reviews'>(
         'description',
     );
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const cart = useCart();
     const wishlist = useWishlist();
     const storefrontItem = productToStorefrontItem(product);
@@ -81,16 +82,40 @@ export default function ProductPage({
                         <span> / {product.name}</span>
                     </div>
                     <div className="grid gap-9 lg:grid-cols-2">
-                        <div className="overflow-hidden rounded-3xl bg-white">
-                            {product.images[0] && (
-                                <img
-                                    src={product.images[0].url}
-                                    alt={
-                                        product.images[0].altText ??
-                                        product.name
-                                    }
-                                    className="aspect-square w-full object-cover"
-                                />
+                        <div className="grid gap-4">
+                            <div className="overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-sm">
+                                {product.images[selectedImageIndex] && (
+                                    <img
+                                        src={product.images[selectedImageIndex].url}
+                                        alt={
+                                            product.images[selectedImageIndex].altText ??
+                                            product.name
+                                        }
+                                        className="aspect-square w-full object-cover transition-all duration-300 hover:scale-105"
+                                    />
+                                )}
+                            </div>
+                            {product.images.length > 1 && (
+                                <div className="flex gap-2.5 overflow-x-auto pb-1">
+                                    {product.images.map((image, idx) => (
+                                        <button
+                                            key={image.id}
+                                            type="button"
+                                            onClick={() => setSelectedImageIndex(idx)}
+                                            className={`size-20 shrink-0 overflow-hidden rounded-2xl border bg-white transition-all ${
+                                                selectedImageIndex === idx
+                                                    ? 'border-brand-blue ring-2 ring-brand-sky/40'
+                                                    : 'border-slate-200 hover:border-slate-400'
+                                            }`}
+                                        >
+                                            <img
+                                                src={image.url}
+                                                alt=""
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
                             )}
                         </div>
                         <div className="py-3">

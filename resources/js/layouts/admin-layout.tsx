@@ -21,7 +21,7 @@ const navigation = [
     { label: 'Products', href: '/admin/products', icon: Boxes },
     { label: 'Categories', href: '/admin/categories', icon: FolderTree },
     { label: 'Orders', href: '/admin/orders', icon: PackageCheck },
-    { label: 'Customers', href: '/admin/users', icon: Users },
+    { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Reviews', href: '/admin/reviews', icon: MessageSquareText },
     { label: 'Activity logs', href: '/admin/logs', icon: Activity },
     { label: 'Customer logs', href: '/admin/customer-logs', icon: ScrollText },

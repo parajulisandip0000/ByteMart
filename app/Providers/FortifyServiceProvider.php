@@ -46,9 +46,11 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::authenticateUsing(function (Request $request) {
-            $role = $request->is('admin/login') ? 'admin' : 'customer';
+            $isAdminRoute = $request->is('admin/login');
             $user = User::where('email', $request->string('email')->toString())
-                ->where('role', $role)
+                ->where('is_active', true)
+                ->when($isAdminRoute, fn ($query) => $query->whereIn('role', ['admin', 'manager']))
+                ->when(! $isAdminRoute, fn ($query) => $query->where('role', 'customer'))
                 ->first();
 
             return $user && Hash::check($request->string('password')->toString(), $user->password)
