@@ -52,17 +52,18 @@ Route::middleware('guest')->group(function () {
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/', AdminDashboardController::class)->name('dashboard');
-    Route::resource('products', AdminProductController::class)->except('show');
-    Route::resource('categories', AdminCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
-    Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
-    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::patch('orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
-    Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
-    Route::patch('reviews/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
-    Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
-    Route::get('logs', [AdminActivityLogController::class, 'index'])->name('logs.index');
-    Route::get('customer-logs', [AdminCustomerActivityLogController::class, 'index'])->name('customer-logs.index');
+    Route::resource('products', AdminProductController::class)->except('show')->middleware('permission:products');
+    Route::resource('categories', AdminCategoryController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('permission:categories');
+    Route::get('users', [AdminUserController::class, 'index'])->name('users.index')->middleware('permission:users');
+    Route::post('users', [AdminUserController::class, 'store'])->name('users.store')->middleware('permission:users');
+    Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update')->middleware('permission:users');
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index')->middleware('permission:orders');
+    Route::patch('orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update')->middleware('permission:orders');
+    Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index')->middleware('permission:reviews');
+    Route::patch('reviews/{review}', [AdminReviewController::class, 'update'])->name('reviews.update')->middleware('permission:reviews');
+    Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy')->middleware('permission:reviews');
+    Route::get('logs', [AdminActivityLogController::class, 'index'])->name('logs.index')->middleware('permission:logs');
+    Route::get('customer-logs', [AdminCustomerActivityLogController::class, 'index'])->name('customer-logs.index')->middleware('permission:customer-logs');
 });
 
 require __DIR__.'/settings.php';

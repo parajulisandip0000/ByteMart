@@ -13,7 +13,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'permissions'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -30,6 +30,19 @@ class User extends Authenticatable implements PasskeyUser
         return in_array($this->role, ['admin', 'manager']);
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        if ($this->role === 'manager' && is_array($this->permissions)) {
+            return in_array($permission, $this->permissions);
+        }
+
+        return false;
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -42,6 +55,7 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'is_active' => 'boolean',
+            'permissions' => 'array',
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsCustomer;
+use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'customer' => EnsureUserIsCustomer::class,
+            'permission' => EnsureUserHasPermission::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*')

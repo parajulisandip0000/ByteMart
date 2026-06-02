@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,6 +40,7 @@ class UserController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'isActive' => $user->is_active,
+                    'permissions' => $user->permissions ?? [],
                     'verifiedAt' => $user->email_verified_at?->toDateTimeString(),
                     'createdAt' => $user->created_at->toDateTimeString(),
                 ]),
@@ -49,11 +51,39 @@ class UserController extends Controller
         ]);
     }
 
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', Rule::in(['admin', 'manager'])],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
+        ]);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role' => $data['role'],
+            'permissions' => $data['role'] === 'manager' ? ($data['permissions'] ?? []) : null,
+            'is_active' => true,
+        ]);
+
+        ActivityLogger::log($request, 'user.created', "Created staff account {$user->name}.", $user);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Staff user created successfully.']);
+
+        return back();
+    }
+
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
             'role' => ['nullable', Rule::in(['customer', 'admin', 'manager'])],
             'is_active' => ['nullable', 'boolean'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
         ]);
 
         $roleChanged = false;
@@ -62,6 +92,9 @@ class UserController extends Controller
         if (isset($data['role']) && $user->role !== $data['role']) {
             abort_if($request->user()->is($user) && $data['role'] !== 'admin', 422, 'You cannot remove your own admin access.');
             $user->role = $data['role'];
+            if ($data['role'] !== 'manager') {
+                $user->permissions = null;
+            }
             $roleChanged = true;
         }
 
@@ -69,6 +102,12 @@ class UserController extends Controller
             abort_if($request->user()->is($user) && !$data['is_active'], 422, 'You cannot deactivate your own account.');
             $user->is_active = (bool)$data['is_active'];
             $activeChanged = true;
+        }
+
+        if (isset($data['permissions'])) {
+            if ($user->role === 'manager') {
+                $user->permissions = $data['permissions'];
+            }
         }
 
         if ($user->isDirty()) {

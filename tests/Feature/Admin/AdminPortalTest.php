@@ -200,4 +200,70 @@ class AdminPortalTest extends TestCase
 
         $this->assertSame('admin', $admin->fresh()->role);
     }
+
+    public function test_admin_can_create_staff_user(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'John Manager',
+                'email' => 'john@bytemart.com',
+                'password' => 'password123',
+                'role' => 'manager',
+                'permissions' => ['products', 'orders'],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'john@bytemart.com',
+            'role' => 'manager',
+        ]);
+
+        $manager = User::where('email', 'john@bytemart.com')->firstOrFail();
+        $this->assertTrue($manager->hasPermission('products'));
+        $this->assertTrue($manager->hasPermission('orders'));
+        $this->assertFalse($manager->hasPermission('categories'));
+    }
+
+    public function test_admin_can_update_manager_permissions(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'permissions' => ['products'],
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $manager), [
+                'permissions' => ['products', 'categories'],
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($manager->fresh()->hasPermission('categories'));
+    }
+
+    public function test_manager_with_permission_can_access_route(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'permissions' => ['products'],
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('admin.products.index'))
+            ->assertOk();
+    }
+
+    public function test_manager_without_permission_cannot_access_route(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'permissions' => ['products'],
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('admin.categories.index'))
+            ->assertForbidden();
+    }
 }

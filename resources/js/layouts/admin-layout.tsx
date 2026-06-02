@@ -16,19 +16,31 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
+import type { Auth } from '@/types/auth';
+
 const navigation = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { label: 'Products', href: '/admin/products', icon: Boxes },
-    { label: 'Categories', href: '/admin/categories', icon: FolderTree },
-    { label: 'Orders', href: '/admin/orders', icon: PackageCheck },
-    { label: 'Users', href: '/admin/users', icon: Users },
-    { label: 'Reviews', href: '/admin/reviews', icon: MessageSquareText },
-    { label: 'Activity logs', href: '/admin/logs', icon: Activity },
-    { label: 'Customer logs', href: '/admin/customer-logs', icon: ScrollText },
+    { label: 'Products', href: '/admin/products', icon: Boxes, permission: 'products' },
+    { label: 'Categories', href: '/admin/categories', icon: FolderTree, permission: 'categories' },
+    { label: 'Orders', href: '/admin/orders', icon: PackageCheck, permission: 'orders' },
+    { label: 'Users', href: '/admin/users', icon: Users, permission: 'users' },
+    { label: 'Reviews', href: '/admin/reviews', icon: MessageSquareText, permission: 'reviews' },
+    { label: 'Activity logs', href: '/admin/logs', icon: Activity, permission: 'logs' },
+    { label: 'Customer logs', href: '/admin/customer-logs', icon: ScrollText, permission: 'customer-logs' },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-    const { url, props } = usePage();
+    const { url, props } = usePage<{ auth: Auth }>();
+    const user = props.auth.user;
+
+    const filteredNavigation = navigation.filter((item) => {
+        if (!item.permission) return true;
+        if (user.role === 'admin') return true;
+        if (user.role === 'manager') {
+            return user.permissions?.includes(item.permission) ?? false;
+        }
+        return false;
+    });
 
     return (
         <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -49,7 +61,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         </span>
                     </Link>
                     <nav className="mt-8 grid gap-1">
-                        {navigation.map((item) => (
+                        {filteredNavigation.map((item) => (
                             <Link
                                 key={item.href}
                                 href={item.href}
