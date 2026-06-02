@@ -26,6 +26,12 @@ class HomePageTest extends TestCase
                 ->where('featuredProducts.0.price', '3499.00')
                 ->where('featuredProducts.0.compareAtPrice', '4499.00')
                 ->where('featuredProducts.0.inStock', true)
+                ->has('saleProducts', 6)
+                ->where('saleProducts.0.name', 'Pulse Wireless Headphones')
+                ->has('topRatedProducts', 6)
+                ->where('topRatedProducts.0.name', 'Pulse Wireless Headphones')
+                ->has('mostPurchasedProducts', 6)
+                ->where('mostPurchasedProducts.0.name', 'Pulse Wireless Headphones')
             );
     }
 }
