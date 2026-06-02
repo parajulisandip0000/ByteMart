@@ -32,6 +32,11 @@ export function StorefrontHeader() {
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const cart = useCart();
     const wishlist = useWishlist();
+    const accountHref = props.auth.user
+        ? props.auth.user.role === 'admin'
+            ? '/admin'
+            : '/dashboard'
+        : '/login';
     const isActive = (href: string) =>
         href === '/' ? url === '/' : url.startsWith(href);
 
@@ -109,9 +114,7 @@ export function StorefrontHeader() {
                         <HeaderTooltip
                             label={props.auth.user ? 'My account' : 'Log in'}
                         >
-                            <Link
-                                href={props.auth.user ? '/dashboard' : '/login'}
-                            >
+                            <Link href={accountHref}>
                                 <Button
                                     variant="ghost"
                                     size="icon"

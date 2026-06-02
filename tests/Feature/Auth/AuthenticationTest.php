@@ -65,6 +65,48 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_admins_cannot_authenticate_using_customer_login(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_admin_login_screen_can_be_rendered(): void
+    {
+        $this->get(route('admin.login'))->assertOk();
+    }
+
+    public function test_admins_can_authenticate_using_admin_login(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->post(route('admin.login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($admin);
+        $response->assertRedirect(route('admin.dashboard', absolute: false));
+    }
+
+    public function test_customers_cannot_authenticate_using_admin_login(): void
+    {
+        $customer = User::factory()->create();
+
+        $this->post(route('admin.login.store'), [
+            'email' => $customer->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+    }
+
     public function test_users_can_logout()
     {
         $user = User::factory()->create();

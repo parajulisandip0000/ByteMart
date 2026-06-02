@@ -11,11 +11,13 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 
 import { StorefrontLayout } from '@/components/layout/storefront-layout';
 import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
 import { useCart, useOrders } from '@/lib/storefront-storage';
+import type { StorefrontOrder } from '@/lib/storefront-storage';
 
 interface CheckoutForm {
     name: string;
@@ -47,6 +49,7 @@ export default function Checkout() {
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState<CheckoutErrors>({});
     const [orderNumber, setOrderNumber] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const deliveryFee =
         form.delivery === 'kathmandu' && cart.subtotal >= 2500
             ? 0
@@ -63,7 +66,7 @@ export default function Checkout() {
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const submitOrder = (event: FormEvent<HTMLFormElement>) => {
+    const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const nextErrors = validateCheckout(form);
 
@@ -73,26 +76,51 @@ export default function Checkout() {
             return;
         }
 
-        const reference = `BM-${Date.now().toString().slice(-8)}`;
+        setIsSubmitting(true);
 
-        orders.addItem({
-            reference,
-            createdAt: new Date().toISOString(),
-            status: 'Order received',
-            customerName: form.name.trim(),
-            deliveryAddress: `${form.address.trim()}, ${form.city.trim()}`,
-            deliveryLabel:
-                form.delivery === 'kathmandu'
-                    ? 'Kathmandu Valley'
-                    : 'Outside Kathmandu Valley',
-            paymentLabel: 'Cash on delivery',
-            items: [...cart.items],
-            subtotal: cart.subtotal,
-            deliveryFee,
-            total,
-        });
-        setOrderNumber(reference);
-        cart.clear();
+        try {
+            const response = await fetch('/checkout/orders', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({
+                    ...form,
+                    items: cart.items.map((item) => ({
+                        id: item.id,
+                        quantity: item.quantity,
+                    })),
+                }),
+            });
+            const data = (await response.json()) as {
+                order?: StorefrontOrder;
+                message?: string;
+            };
+
+            if (!response.ok || !data.order) {
+                throw new Error(
+                    data.message ?? 'Unable to place your order right now.',
+                );
+            }
+
+            orders.addItem(data.order);
+            setOrderNumber(data.order.reference);
+            cart.clear();
+            toast.success('Your order has been placed successfully.');
+        } catch (error) {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to place your order right now.',
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (orderNumber) {
@@ -245,6 +273,7 @@ export default function Checkout() {
                                 total={total}
                                 items={cart.items}
                                 setQuantity={cart.setQuantity}
+                                isSubmitting={isSubmitting}
                             />
                         </form>
                     ) : (
@@ -353,12 +382,14 @@ function OrderSummary({
     total,
     items,
     setQuantity,
+    isSubmitting,
 }: {
     subtotal: number;
     deliveryFee: number;
     total: number;
     items: ReturnType<typeof useCart>['items'];
     setQuantity: ReturnType<typeof useCart>['setQuantity'];
+    isSubmitting: boolean;
 }) {
     return (
         <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-4">
@@ -427,9 +458,11 @@ function OrderSummary({
             <Button
                 type="submit"
                 size="lg"
+                disabled={isSubmitting}
                 className="mt-6 w-full bg-brand-orange font-bold hover:bg-orange-600"
             >
-                <ShieldCheck /> Place order
+                <ShieldCheck />{' '}
+                {isSubmitting ? 'Placing order...' : 'Place order'}
             </Button>
             <p className="mt-3 text-center text-xs leading-5 text-slate-500">
                 Your details are used only to process this order.

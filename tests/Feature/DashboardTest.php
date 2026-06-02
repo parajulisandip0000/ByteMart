@@ -42,4 +42,11 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('orders'));
     }
+
+    public function test_admins_are_redirected_away_from_customer_dashboard(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('dashboard'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
 }
