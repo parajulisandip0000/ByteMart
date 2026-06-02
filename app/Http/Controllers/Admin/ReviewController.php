@@ -12,19 +12,30 @@ use Inertia\Response;
 
 class ReviewController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+
         return Inertia::render('admin/reviews/index', [
-            'reviews' => ProductReview::with('product:id,name,slug')->latest()->paginate(20)->through(fn (ProductReview $review) => [
-                'id' => $review->id,
-                'product' => $review->product?->name,
-                'name' => $review->name,
-                'email' => $review->email,
-                'rating' => $review->rating,
-                'comment' => $review->comment,
-                'isApproved' => $review->is_approved,
-                'createdAt' => $review->created_at->toDateTimeString(),
-            ]),
+            'reviews' => ProductReview::with('product:id,name,slug')
+                ->when($search, fn ($query) => $query
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('comment', 'like', "%{$search}%")
+                    ->orWhereHas('product', fn ($q) => $q->where('name', 'like', "%{$search}%")))
+                ->latest()
+                ->paginate(20)
+                ->withQueryString()
+                ->through(fn (ProductReview $review) => [
+                    'id' => $review->id,
+                    'product' => $review->product?->name,
+                    'name' => $review->name,
+                    'email' => $review->email,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'isApproved' => $review->is_approved,
+                    'createdAt' => $review->created_at->toDateTimeString(),
+                ]),
+            'filters' => ['search' => $search],
         ]);
     }
 

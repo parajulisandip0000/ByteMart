@@ -15,6 +15,7 @@ interface ProductRow {
     categories: string[];
     price: string | null;
     stockQuantity: number;
+    soldCount: number;
     isActive: boolean;
     imageUrl: string | null;
 }
@@ -78,6 +79,7 @@ export default function ProductsIndex({
                             <th className="px-4 py-3">Categories</th>
                             <th className="px-4 py-3">Price</th>
                             <th className="px-4 py-3">Stock</th>
+                            <th className="px-4 py-3">Sold</th>
                             <th className="px-4 py-3">Status</th>
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
@@ -112,6 +114,9 @@ export default function ProductsIndex({
                                 </td>
                                 <td className="px-4 py-3">
                                     {product.stockQuantity}
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-slate-700">
+                                    {product.soldCount}
                                 </td>
                                 <td className="px-4 py-3">
                                     <Status active={product.isActive} />

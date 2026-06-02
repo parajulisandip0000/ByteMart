@@ -140,6 +140,26 @@ function readStoredItems<T>(key: string): T[] {
     }
 }
 
+function fireAnalyticsUpdate(
+    type: 'wishlist' | 'cart',
+    productSlug: string,
+    body: Record<string, unknown>
+) {
+    const csrfToken =
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    fetch(`/products/${productSlug}/${type}`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(body),
+    }).catch((err) => {
+        console.error(`Failed to track ${type} analytics:`, err);
+    });
+}
+
 function writeStoredItems<T>(key: string, items: T[]) {
     window.localStorage.setItem(key, JSON.stringify(items));
     window.dispatchEvent(new Event(storefrontStorageEvent));
@@ -171,6 +191,9 @@ function addCartItem(item: StorefrontItem, quantity: number) {
         );
         toast.success(`${item.name} added to your cart.`);
 
+        // Track in background
+        fireAnalyticsUpdate('cart', item.slug, { delta: quantity });
+
         return true;
     } catch {
         toast.error('Unable to update your cart. Please try again.');
@@ -180,15 +203,28 @@ function addCartItem(item: StorefrontItem, quantity: number) {
 }
 
 function setCartQuantity(id: number, quantity: number) {
+    const items = readStoredItems<CartItem>(cartKey);
+    const item = items.find((cartItem) => cartItem.id === id);
+
     if (quantity < 1) {
+        if (item) {
+            fireAnalyticsUpdate('cart', item.slug, { delta: -item.quantity });
+        }
         removeStoredItem(cartKey, id);
 
         return;
     }
 
+    if (item) {
+        const delta = quantity - item.quantity;
+        if (delta !== 0) {
+            fireAnalyticsUpdate('cart', item.slug, { delta });
+        }
+    }
+
     writeStoredItems(
         cartKey,
-        readStoredItems<CartItem>(cartKey).map((item) =>
+        items.map((item) =>
             item.id === id ? { ...item, quantity } : item,
         ),
     );
@@ -213,6 +249,9 @@ function toggleWishlistItem(item: StorefrontItem) {
                 : `${item.name} added to your wishlist.`,
         );
 
+        // Track in background
+        fireAnalyticsUpdate('wishlist', item.slug, { action: exists ? 'remove' : 'add' });
+
         return true;
     } catch {
         toast.error('Unable to update your wishlist. Please try again.');
@@ -223,6 +262,11 @@ function toggleWishlistItem(item: StorefrontItem) {
 
 function removeCartItem(id: number) {
     try {
+        const items = readStoredItems<CartItem>(cartKey);
+        const item = items.find((cartItem) => cartItem.id === id);
+        if (item) {
+            fireAnalyticsUpdate('cart', item.slug, { delta: -item.quantity });
+        }
         removeStoredItem(cartKey, id);
         toast.success('Product removed from your cart.');
     } catch {
@@ -232,6 +276,11 @@ function removeCartItem(id: number) {
 
 function removeWishlistItem(id: number) {
     try {
+        const items = readStoredItems<StorefrontItem>(wishlistKey);
+        const item = items.find((wishlistItem) => wishlistItem.id === id);
+        if (item) {
+            fireAnalyticsUpdate('wishlist', item.slug, { action: 'remove' });
+        }
         removeStoredItem(wishlistKey, id);
         toast.success('Product removed from your wishlist.');
     } catch {

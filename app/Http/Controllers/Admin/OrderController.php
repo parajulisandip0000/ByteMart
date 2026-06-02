@@ -16,22 +16,34 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+
         return Inertia::render('admin/orders/index', [
-            'orders' => Order::withCount('items')->latest()->paginate(20)->through(fn (Order $order) => [
-                'id' => $order->id,
-                'reference' => $order->reference,
-                'customerName' => $order->customer_name,
-                'email' => $order->email,
-                'phone' => $order->phone,
-                'deliveryAddress' => "{$order->address}, {$order->city}",
-                'paymentMethod' => $order->payment_method,
-                'status' => $order->status,
-                'itemsCount' => $order->items_count,
-                'total' => $order->total,
-                'createdAt' => $order->created_at->toDateTimeString(),
-            ]),
+            'orders' => Order::withCount('items')
+                ->when($search, fn ($query) => $query
+                    ->where('reference', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%"))
+                ->latest()
+                ->paginate(20)
+                ->withQueryString()
+                ->through(fn (Order $order) => [
+                    'id' => $order->id,
+                    'reference' => $order->reference,
+                    'customerName' => $order->customer_name,
+                    'email' => $order->email,
+                    'phone' => $order->phone,
+                    'deliveryAddress' => "{$order->address}, {$order->city}",
+                    'paymentMethod' => $order->payment_method,
+                    'status' => $order->status,
+                    'itemsCount' => $order->items_count,
+                    'total' => $order->total,
+                    'createdAt' => $order->created_at->toDateTimeString(),
+                ]),
+            'filters' => ['search' => $search],
         ]);
     }
 

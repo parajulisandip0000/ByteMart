@@ -24,6 +24,7 @@ class ProductController extends Controller
 
         return Inertia::render('admin/products/index', [
             'products' => Product::with(['brand:id,name', 'categories:id,name', 'variants', 'images'])
+                ->withSum('orderItems as sold_count', 'quantity')
                 ->when($search, fn ($query) => $query->where('name', 'like', "%{$search}%"))
                 ->latest()
                 ->paginate(12)
@@ -208,6 +209,7 @@ class ProductController extends Controller
             'categories' => $product->categories->pluck('name'),
             'price' => $variant?->price,
             'stockQuantity' => $variant?->stock_quantity ?? 0,
+            'soldCount' => (int) ($product->sold_count ?? 0),
             'isActive' => $product->is_active,
             'imageUrl' => $product->images->first()?->url,
         ];

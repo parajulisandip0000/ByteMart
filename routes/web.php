@@ -31,6 +31,8 @@ Route::inertia('/checkout', 'storefront/checkout')->name('checkout.index');
 Route::post('/checkout/orders', [OrderController::class, 'store'])->name('checkout.orders.store');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])->name('products.reviews.store');
+Route::post('/products/{product}/wishlist', [ProductController::class, 'trackWishlist'])->name('products.wishlist.track');
+Route::post('/products/{product}/cart', [ProductController::class, 'trackCart'])->name('products.cart.track');
 Route::get('/search/suggestions', SearchSuggestionController::class)->name('search.suggestions');
 Route::get('/about', [ContentPageController::class, 'about'])->name('about');
 Route::get('/delivery', [ContentPageController::class, 'delivery'])->name('delivery');

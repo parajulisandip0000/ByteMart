@@ -35,7 +35,8 @@ class AdminPortalTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('admin/dashboard')
-                ->has('metrics'));
+                ->has('metrics')
+                ->has('analytics'));
     }
 
     public function test_admin_can_view_customer_logs(): void

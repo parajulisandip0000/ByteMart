@@ -1,7 +1,10 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import type { FormEvent } from 'react';
 
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Pagination } from '@/components/admin/pagination';
+import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
 
 interface OrderRow {
@@ -32,7 +35,20 @@ const statuses = [
     'cancelled',
 ];
 
-export default function OrdersIndex({ orders }: { orders: Orders }) {
+export default function OrdersIndex({
+    orders,
+    filters,
+}: {
+    orders: Orders;
+    filters: { search: string };
+}) {
+    const search = useForm({ search: filters?.search ?? '' });
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        search.get('/admin/orders', { preserveState: true });
+    };
+
     return (
         <>
             <Head title="Manage orders" />
@@ -41,6 +57,23 @@ export default function OrdersIndex({ orders }: { orders: Orders }) {
                 title="Orders"
                 description="Track COD orders from checkout and update fulfillment progress for the ByteMart team."
             />
+            <form
+                onSubmit={submit}
+                className="mt-6 flex max-w-xl gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+            >
+                <Search className="mt-2 size-5 text-slate-400" />
+                <input
+                    value={search.data.search}
+                    onChange={(event) =>
+                        search.setData('search', event.target.value)
+                    }
+                    placeholder="Search reference, customer, email or phone"
+                    className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none"
+                />
+                <Button type="submit" className="bg-brand-blue font-bold">
+                    Search
+                </Button>
+            </form>
             <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <table className="w-full min-w-5xl text-left text-sm">
                     <thead className="border-b border-slate-200 bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">

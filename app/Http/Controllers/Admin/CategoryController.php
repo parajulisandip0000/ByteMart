@@ -16,20 +16,29 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+
         return Inertia::render('admin/categories/index', [
-            'categories' => Category::with('parent:id,name')->withCount('products')->orderBy('sort_order')->orderBy('name')->get()->map(fn (Category $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'slug' => $category->slug,
-                'parent' => $category->parent?->name,
-                'parentId' => $category->parent_id,
-                'imageUrl' => $category->image_url,
-                'sortOrder' => $category->sort_order,
-                'isActive' => $category->is_active,
-                'productsCount' => $category->products_count,
-            ]),
+            'categories' => Category::with('parent:id,name')
+                ->withCount('products')
+                ->when($search, fn ($query) => $query->where('name', 'like', "%{$search}%"))
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Category $category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'parent' => $category->parent?->name,
+                    'parentId' => $category->parent_id,
+                    'imageUrl' => $category->image_url,
+                    'sortOrder' => $category->sort_order,
+                    'isActive' => $category->is_active,
+                    'productsCount' => $category->products_count,
+                ]),
+            'filters' => ['search' => $search],
         ]);
     }
 

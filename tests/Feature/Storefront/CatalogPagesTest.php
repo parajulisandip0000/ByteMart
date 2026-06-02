@@ -252,4 +252,46 @@ class CatalogPagesTest extends TestCase
             ['returns', 'storefront/returns'],
         ];
     }
+
+    public function test_track_wishlist_increments_and_decrements_wishlist_count(): void
+    {
+        $product = Product::query()->where('slug', 'pulse-wireless-headphones')->firstOrFail();
+        $product->wishlist_count = 0;
+        $product->save();
+
+        // Increment
+        $this->postJson(route('products.wishlist.track', $product), ['action' => 'add'])
+            ->assertOk()
+            ->assertJson(['success' => true, 'wishlist_count' => 1]);
+
+        $this->assertSame(1, $product->fresh()->wishlist_count);
+
+        // Decrement
+        $this->postJson(route('products.wishlist.track', $product), ['action' => 'remove'])
+            ->assertOk()
+            ->assertJson(['success' => true, 'wishlist_count' => 0]);
+
+        $this->assertSame(0, $product->fresh()->wishlist_count);
+    }
+
+    public function test_track_cart_increments_and_decrements_cart_count(): void
+    {
+        $product = Product::query()->where('slug', 'pulse-wireless-headphones')->firstOrFail();
+        $product->cart_count = 0;
+        $product->save();
+
+        // Increment
+        $this->postJson(route('products.cart.track', $product), ['delta' => 2])
+            ->assertOk()
+            ->assertJson(['success' => true, 'cart_count' => 2]);
+
+        $this->assertSame(2, $product->fresh()->cart_count);
+
+        // Decrement
+        $this->postJson(route('products.cart.track', $product), ['delta' => -1])
+            ->assertOk()
+            ->assertJson(['success' => true, 'cart_count' => 1]);
+
+        $this->assertSame(1, $product->fresh()->cart_count);
+    }
 }

@@ -1,5 +1,6 @@
-import { Head, router } from '@inertiajs/react';
-import { Star, Trash2 } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Search, Star, Trash2 } from 'lucide-react';
+import type { FormEvent } from 'react';
 
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Pagination } from '@/components/admin/pagination';
@@ -21,7 +22,20 @@ interface Reviews {
     links: { url: string | null; label: string; active: boolean }[];
 }
 
-export default function ReviewsIndex({ reviews }: { reviews: Reviews }) {
+export default function ReviewsIndex({
+    reviews,
+    filters,
+}: {
+    reviews: Reviews;
+    filters: { search: string };
+}) {
+    const search = useForm({ search: filters?.search ?? '' });
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        search.get('/admin/reviews', { preserveState: true });
+    };
+
     return (
         <>
             <Head title="Product reviews" />
@@ -30,6 +44,23 @@ export default function ReviewsIndex({ reviews }: { reviews: Reviews }) {
                 title="Product reviews"
                 description="Review customer feedback across the storefront. Moderation actions can be added when the review workflow requires approval queues."
             />
+            <form
+                onSubmit={submit}
+                className="mt-6 flex max-w-xl gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+            >
+                <Search className="mt-2 size-5 text-slate-400" />
+                <input
+                    value={search.data.search}
+                    onChange={(event) =>
+                        search.setData('search', event.target.value)
+                    }
+                    placeholder="Search reviewer or product name"
+                    className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none"
+                />
+                <Button type="submit" className="bg-brand-blue font-bold">
+                    Search
+                </Button>
+            </form>
             <div className="mt-6 grid gap-4">
                 {reviews.data.map((review) => (
                     <article

@@ -51,6 +51,9 @@ class CatalogSeeder extends Seeder
         ];
 
         foreach ($products as $item) {
+            $wishlistCount = $item['featured'] ? rand(30, 60) : rand(5, 25);
+            $cartCount = $item['featured'] ? rand(15, 35) : rand(2, 12);
+
             $product = Product::query()->create([
                 'brand_id' => $brands[$item['brand']]->id,
                 'name' => $item['name'],
@@ -58,6 +61,8 @@ class CatalogSeeder extends Seeder
                 'short_description' => 'A dependable ByteMart pick made for comfortable everyday use.',
                 'description' => 'Selected for quality, practicality, and lasting value, this product is a reliable addition to your daily routine. It is carefully packed and supported by ByteMart customer care for a straightforward shopping experience.',
                 'is_featured' => $item['featured'],
+                'wishlist_count' => $wishlistCount,
+                'cart_count' => $cartCount,
             ]);
 
             $product->categories()->attach($categories[$item['category']]);
@@ -79,6 +84,83 @@ class CatalogSeeder extends Seeder
                 'rating' => $item['featured'] ? 5 : 4,
                 'comment' => 'Good quality product and a smooth delivery experience. The item matched the description.',
             ]);
+        }
+
+        // Seed mock orders for analytics
+        $allProducts = Product::with(['variants', 'images'])->get();
+        if ($allProducts->count() >= 5) {
+            $customers = [
+                ['name' => 'Sita Thapa', 'email' => 'sita@example.com', 'phone' => '9841234567', 'city' => 'Kathmandu', 'address' => 'Balaju'],
+                ['name' => 'Ram Shrestha', 'email' => 'ram@example.com', 'phone' => '9851098765', 'city' => 'Lalitpur', 'address' => 'Patan'],
+                ['name' => 'Hari Prasad', 'email' => 'hari@example.com', 'phone' => '9803112233', 'city' => 'Pokhara', 'address' => 'Lakeside'],
+                ['name' => 'Gita Sharma', 'email' => 'gita@example.com', 'phone' => '9812345678', 'city' => 'Bhaktapur', 'address' => 'Suryabinayak'],
+                ['name' => 'Ramesh Chaudhary', 'email' => 'ramesh@example.com', 'phone' => '9865432109', 'city' => 'Kathmandu', 'address' => 'Koteshwor']
+            ];
+
+            // Define order items combinations
+            // Order 1: 2x Pulse Wireless Headphones (0), 1x Everyday Canvas Sneakers (2)
+            // Order 2: 1x Nova Smart Watch (1), 3x Brew Ceramic Mug Set (6)
+            // Order 3: 2x Everyday Canvas Sneakers (2), 1x Glow Daily Skincare Set (4)
+            // Order 4: 1x Nordic Table Lamp (3)
+            // Order 5: 1x Pulse Wireless Headphones (0)
+            $orderItemsMapping = [
+                0 => [[0, 2], [2, 1]],
+                1 => [[1, 1], [6, 3]],
+                2 => [[2, 2], [4, 1]],
+                3 => [[3, 1]],
+                4 => [[0, 1]]
+            ];
+
+            foreach ($customers as $index => $cust) {
+                $itemsData = [];
+                $subtotal = 0;
+
+                foreach ($orderItemsMapping[$index] as $mapping) {
+                    $prodIndex = $mapping[0];
+                    $qty = $mapping[1];
+
+                    if (isset($allProducts[$prodIndex])) {
+                        $prod = $allProducts[$prodIndex];
+                        $variant = $prod->variants->first();
+                        $price = $variant ? $variant->price : 1000;
+                        $lineTotal = $price * $qty;
+
+                        $itemsData[] = [
+                            'product_id' => $prod->id,
+                            'product_name' => $prod->name,
+                            'sku' => $variant ? $variant->sku : null,
+                            'image_url' => $prod->images->first()?->url,
+                            'unit_price' => $price,
+                            'quantity' => $qty,
+                            'line_total' => $lineTotal
+                        ];
+                        $subtotal += $lineTotal;
+                    }
+                }
+
+                $deliveryFee = $subtotal >= 2500 ? 0 : 100;
+                $order = \App\Models\Order::create([
+                    'reference' => 'BM-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8)),
+                    'user_id' => null,
+                    'customer_name' => $cust['name'],
+                    'email' => $cust['email'],
+                    'phone' => $cust['phone'],
+                    'address' => $cust['address'],
+                    'city' => $cust['city'],
+                    'delivery_method' => $cust['city'] === 'Kathmandu' ? 'kathmandu' : 'outside',
+                    'payment_method' => 'cod',
+                    'status' => 'received',
+                    'subtotal' => $subtotal,
+                    'delivery_fee' => $deliveryFee,
+                    'total' => $subtotal + $deliveryFee,
+                    'created_at' => now()->subDays(5 - $index),
+                    'updated_at' => now()->subDays(5 - $index),
+                ]);
+
+                foreach ($itemsData as $itemData) {
+                    $order->items()->create($itemData);
+                }
+            }
         }
     }
 }

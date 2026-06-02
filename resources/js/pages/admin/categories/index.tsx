@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { ImageUp, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ImageUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -20,10 +20,13 @@ interface Category {
 
 export default function CategoriesIndex({
     categories,
+    filters,
 }: {
     categories: Category[];
+    filters: { search: string };
 }) {
     const [editing, setEditing] = useState<Category | null>(null);
+    const searchForm = useForm({ search: filters?.search ?? '' });
     const form = useForm({
         name: '',
         slug: '',
@@ -68,6 +71,11 @@ export default function CategoriesIndex({
         );
     };
 
+    const submitSearch = (event: FormEvent) => {
+        event.preventDefault();
+        searchForm.get('/admin/categories', { preserveState: true });
+    };
+
     return (
         <>
             <Head title="Manage categories" />
@@ -76,6 +84,23 @@ export default function CategoriesIndex({
                 title="Categories"
                 description="Maintain category navigation, storefront imagery, visibility, and display order."
             />
+            <form
+                onSubmit={submitSearch}
+                className="mt-6 flex max-w-xl gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+            >
+                <Search className="mt-2 size-5 text-slate-400" />
+                <input
+                    value={searchForm.data.search}
+                    onChange={(event) =>
+                        searchForm.setData('search', event.target.value)
+                    }
+                    placeholder="Search categories"
+                    className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none"
+                />
+                <Button type="submit" className="bg-brand-blue font-bold">
+                    Search
+                </Button>
+            </form>
             <div className="mt-6 grid gap-6 xl:grid-cols-[360px_1fr]">
                 <form
                     onSubmit={submit}
