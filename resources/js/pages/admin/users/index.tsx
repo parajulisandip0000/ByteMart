@@ -62,7 +62,6 @@ export default function UsersIndex({
     const addForm = useForm({
         name: '',
         email: '',
-        password: '',
         role: 'manager' as 'admin' | 'manager',
         permissions: [] as string[],
     });
@@ -109,6 +108,43 @@ export default function UsersIndex({
                 onSuccess: () => {
                     setIsPermOpen(false);
                     setEditingUser(null);
+                },
+            });
+        }
+    };
+
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingStaffUser, setEditingStaffUser] = useState<UserRow | null>(null);
+
+    const editForm = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: 'manager' as 'admin' | 'manager' | 'customer',
+        permissions: [] as string[],
+    });
+
+    const openEdit = (user: UserRow) => {
+        setEditingStaffUser(user);
+        editForm.setData({
+            name: user.name,
+            email: user.email,
+            password: '',
+            role: user.role,
+            permissions: user.permissions ?? [],
+        });
+        editForm.clearErrors();
+        setIsEditOpen(true);
+    };
+
+    const submitEdit = (e: FormEvent) => {
+        e.preventDefault();
+        if (editingStaffUser) {
+            editForm.patch(`/admin/users/${editingStaffUser.id}`, {
+                onSuccess: () => {
+                    setIsEditOpen(false);
+                    setEditingStaffUser(null);
+                    editForm.reset();
                 },
             });
         }
@@ -205,18 +241,7 @@ export default function UsersIndex({
                                     {addForm.errors.email && <span className="mt-1 block text-xs text-red-600 font-semibold">{addForm.errors.email}</span>}
                                 </label>
 
-                                <label className="text-xs font-black text-slate-700 uppercase block">
-                                    Password
-                                    <input
-                                        type="password"
-                                        required
-                                        minLength={8}
-                                        value={addForm.data.password}
-                                        onChange={(e) => addForm.setData('password', e.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
-                                    />
-                                    {addForm.errors.password && <span className="mt-1 block text-xs text-red-600 font-semibold">{addForm.errors.password}</span>}
-                                </label>
+
 
                                 <label className="text-xs font-black text-slate-700 uppercase block">
                                     Role
@@ -342,6 +367,14 @@ export default function UsersIndex({
                                         )}
                                         <Button
                                             size="sm"
+                                            variant="secondary"
+                                            className="text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                            onClick={() => openEdit(user)}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="sm"
                                             variant="outline"
                                             className="text-xs font-bold"
                                             onClick={() =>
@@ -403,6 +436,104 @@ export default function UsersIndex({
                                 Save Changes
                             </Button>
                             <Button type="button" variant="outline" onClick={() => setIsPermOpen(false)}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit User Modal */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="max-w-md rounded-2xl p-6 bg-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black text-slate-950">Edit User Account</DialogTitle>
+                        <DialogDescription className="text-slate-500 font-semibold">
+                            Update profile details, role, and permissions for <strong className="text-slate-800">{editingStaffUser?.name}</strong>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={submitEdit} className="mt-4 grid gap-4">
+                        <label className="text-xs font-black text-slate-700 uppercase block">
+                            Name
+                            <input
+                                type="text"
+                                required
+                                value={editForm.data.name}
+                                onChange={(e) => editForm.setData('name', e.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+                            />
+                            {editForm.errors.name && <span className="mt-1 block text-xs text-red-600 font-semibold">{editForm.errors.name}</span>}
+                        </label>
+
+                        <label className="text-xs font-black text-slate-700 uppercase block">
+                            Email
+                            <input
+                                type="email"
+                                required
+                                value={editForm.data.email}
+                                onChange={(e) => editForm.setData('email', e.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+                            />
+                            {editForm.errors.email && <span className="mt-1 block text-xs text-red-600 font-semibold">{editForm.errors.email}</span>}
+                        </label>
+
+                        <label className="text-xs font-black text-slate-700 uppercase block">
+                            Password
+                            <input
+                                type="password"
+                                placeholder="Leave blank to keep current"
+                                value={editForm.data.password}
+                                onChange={(e) => editForm.setData('password', e.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+                            />
+                            {editForm.errors.password && <span className="mt-1 block text-xs text-red-600 font-semibold">{editForm.errors.password}</span>}
+                        </label>
+
+                        <label className="text-xs font-black text-slate-700 uppercase block">
+                            Role
+                            <select
+                                value={editForm.data.role}
+                                onChange={(e) => editForm.setData('role', e.target.value as any)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-brand-blue bg-white"
+                            >
+                                <option value="customer">Customer</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            {editForm.errors.role && <span className="mt-1 block text-xs text-red-600 font-semibold">{editForm.errors.role}</span>}
+                        </label>
+
+                        {editForm.data.role === 'manager' && (
+                            <div className="mt-1 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                <span className="block text-xs font-black text-slate-700 uppercase mb-2">Permissions</span>
+                                <div className="grid gap-2 max-h-[150px] overflow-y-auto pr-1">
+                                    {AVAILABLE_PERMISSIONS.map((perm) => (
+                                        <label key={perm.value} className="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={editForm.data.permissions.includes(perm.value)}
+                                                onChange={(e) => {
+                                                    editForm.setData(
+                                                        'permissions',
+                                                        e.target.checked
+                                                            ? [...editForm.data.permissions, perm.value]
+                                                            : editForm.data.permissions.filter((x) => x !== perm.value)
+                                                    );
+                                                }}
+                                                className="rounded border-slate-300 text-brand-blue focus:ring-brand-blue"
+                                            />
+                                            {perm.label}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
+                            <Button type="submit" disabled={editForm.processing} className="bg-brand-blue font-bold">
+                                Save Changes
+                            </Button>
+                            <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
                                 Cancel
                             </Button>
                         </div>

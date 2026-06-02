@@ -12,6 +12,10 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Notifications\StaffAccountCreated;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+
 class UserController extends Controller
 {
     public function index(Request $request): Response
@@ -56,20 +60,25 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['nullable', 'string', 'min:8'],
             'role' => ['required', Rule::in(['admin', 'manager'])],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string'],
         ]);
 
+        $password = !empty($data['password']) ? $data['password'] : Str::random(32);
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($password),
             'role' => $data['role'],
             'permissions' => $data['role'] === 'manager' ? ($data['permissions'] ?? []) : null,
             'is_active' => true,
         ]);
+
+        $token = Password::getRepository()->create($user);
+        $user->notify(new StaffAccountCreated($token));
 
         ActivityLogger::log($request, 'user.created', "Created staff account {$user->name}.", $user);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Staff user created successfully.']);
@@ -80,6 +89,9 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user)],
+            'password' => ['nullable', 'string', 'min:8'],
             'role' => ['nullable', Rule::in(['customer', 'admin', 'manager'])],
             'is_active' => ['nullable', 'boolean'],
             'permissions' => ['nullable', 'array'],
@@ -88,6 +100,22 @@ class UserController extends Controller
 
         $roleChanged = false;
         $activeChanged = false;
+        $detailsChanged = false;
+
+        if (isset($data['name']) && $user->name !== $data['name']) {
+            $user->name = $data['name'];
+            $detailsChanged = true;
+        }
+
+        if (isset($data['email']) && $user->email !== $data['email']) {
+            $user->email = $data['email'];
+            $detailsChanged = true;
+        }
+
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+            $detailsChanged = true;
+        }
 
         if (isset($data['role']) && $user->role !== $data['role']) {
             abort_if($request->user()->is($user) && $data['role'] !== 'admin', 422, 'You cannot remove your own admin access.');
@@ -112,6 +140,10 @@ class UserController extends Controller
 
         if ($user->isDirty()) {
             $user->save();
+
+            if ($detailsChanged) {
+                ActivityLogger::log($request, 'user.updated', "Updated staff account {$user->name}.", $user);
+            }
 
             if ($roleChanged) {
                 ActivityLogger::log($request, 'user.role_updated', "Changed {$user->name}'s role to {$user->role}.", $user);

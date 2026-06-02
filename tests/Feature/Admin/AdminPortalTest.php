@@ -226,6 +226,36 @@ class AdminPortalTest extends TestCase
         $this->assertFalse($manager->hasPermission('categories'));
     }
 
+    public function test_admin_can_create_staff_user_without_password(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'Jane Manager',
+                'email' => 'jane@bytemart.com',
+                'role' => 'manager',
+                'permissions' => ['products'],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'jane@bytemart.com',
+            'role' => 'manager',
+        ]);
+
+        $manager = User::where('email', 'jane@bytemart.com')->firstOrFail();
+        $this->assertNotEmpty($manager->password);
+        $this->assertTrue($manager->hasPermission('products'));
+
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $manager,
+            \App\Notifications\StaffAccountCreated::class
+        );
+    }
+
     public function test_admin_can_update_manager_permissions(): void
     {
         $admin = User::factory()->admin()->create();
