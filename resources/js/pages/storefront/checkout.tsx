@@ -15,7 +15,7 @@ import type { FormEvent } from 'react';
 import { StorefrontLayout } from '@/components/layout/storefront-layout';
 import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
-import { useCart } from '@/lib/storefront-storage';
+import { useCart, useOrders } from '@/lib/storefront-storage';
 
 interface CheckoutForm {
     name: string;
@@ -43,6 +43,7 @@ const initialForm: CheckoutForm = {
 
 export default function Checkout() {
     const cart = useCart();
+    const orders = useOrders();
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState<CheckoutErrors>({});
     const [orderNumber, setOrderNumber] = useState<string | null>(null);
@@ -72,7 +73,25 @@ export default function Checkout() {
             return;
         }
 
-        setOrderNumber(`BM-${Date.now().toString().slice(-8)}`);
+        const reference = `BM-${Date.now().toString().slice(-8)}`;
+
+        orders.addItem({
+            reference,
+            createdAt: new Date().toISOString(),
+            status: 'Order received',
+            customerName: form.name.trim(),
+            deliveryAddress: `${form.address.trim()}, ${form.city.trim()}`,
+            deliveryLabel:
+                form.delivery === 'kathmandu'
+                    ? 'Kathmandu Valley'
+                    : 'Outside Kathmandu Valley',
+            paymentLabel: 'Cash on delivery',
+            items: [...cart.items],
+            subtotal: cart.subtotal,
+            deliveryFee,
+            total,
+        });
+        setOrderNumber(reference);
         cart.clear();
     };
 

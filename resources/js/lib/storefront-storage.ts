@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { toast } from 'sonner';
 
 import type { Product, ProductDetail } from '@/types';
 
@@ -17,8 +18,23 @@ export interface CartItem extends StorefrontItem {
     quantity: number;
 }
 
+export interface StorefrontOrder {
+    reference: string;
+    createdAt: string;
+    status: 'Order received';
+    customerName: string;
+    deliveryAddress: string;
+    deliveryLabel: string;
+    paymentLabel: string;
+    items: CartItem[];
+    subtotal: number;
+    deliveryFee: number;
+    total: number;
+}
+
 const cartKey = 'bytemart-cart';
 const wishlistKey = 'bytemart-wishlist';
+const ordersKey = 'bytemart-orders';
 const storefrontStorageEvent = 'bytemart-storage';
 const emptyItems: [] = [];
 const storageCache = new Map<string, { raw: string; items: unknown[] }>();
@@ -35,7 +51,7 @@ export function useCart() {
         ),
         addItem: (item: StorefrontItem, quantity = 1) =>
             addCartItem(item, quantity),
-        removeItem: (id: number) => removeStoredItem(cartKey, id),
+        removeItem: (id: number) => removeCartItem(id),
         setQuantity: (id: number, quantity: number) =>
             setCartQuantity(id, quantity),
         clear: () => writeStoredItems(cartKey, []),
@@ -50,8 +66,19 @@ export function useWishlist() {
         itemCount: items.length,
         hasItem: (id: number) => items.some((item) => item.id === id),
         toggleItem: (item: StorefrontItem) => toggleWishlistItem(item),
-        removeItem: (id: number) => removeStoredItem(wishlistKey, id),
+        removeItem: (id: number) => removeWishlistItem(id),
         clear: () => writeStoredItems(wishlistKey, []),
+    };
+}
+
+export function useOrders() {
+    const items = useStoredItems<StorefrontOrder>(ordersKey);
+
+    return {
+        items,
+        itemCount: items.length,
+        addItem: (item: StorefrontOrder) =>
+            writeStoredItems(ordersKey, [item, ...items]),
     };
 }
 
@@ -119,16 +146,37 @@ function writeStoredItems<T>(key: string, items: T[]) {
 }
 
 function addCartItem(item: StorefrontItem, quantity: number) {
-    const items = readStoredItems<CartItem>(cartKey);
-    const existingItem = items.find((cartItem) => cartItem.id === item.id);
+    if (!item.inStock) {
+        toast.error(`${item.name} is currently out of stock.`);
 
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        items.push({ ...item, quantity });
+        return false;
     }
 
-    writeStoredItems(cartKey, items);
+    try {
+        const items = readStoredItems<CartItem>(cartKey);
+        const existingItem = items.find((cartItem) => cartItem.id === item.id);
+
+        writeStoredItems(
+            cartKey,
+            existingItem
+                ? items.map((cartItem) =>
+                      cartItem.id === item.id
+                          ? {
+                                ...cartItem,
+                                quantity: cartItem.quantity + quantity,
+                            }
+                          : cartItem,
+                  )
+                : [...items, { ...item, quantity }],
+        );
+        toast.success(`${item.name} added to your cart.`);
+
+        return true;
+    } catch {
+        toast.error('Unable to update your cart. Please try again.');
+
+        return false;
+    }
 }
 
 function setCartQuantity(id: number, quantity: number) {
@@ -147,15 +195,48 @@ function setCartQuantity(id: number, quantity: number) {
 }
 
 function toggleWishlistItem(item: StorefrontItem) {
-    const items = readStoredItems<StorefrontItem>(wishlistKey);
-    const exists = items.some((wishlistItem) => wishlistItem.id === item.id);
+    try {
+        const items = readStoredItems<StorefrontItem>(wishlistKey);
+        const exists = items.some(
+            (wishlistItem) => wishlistItem.id === item.id,
+        );
 
-    writeStoredItems(
-        wishlistKey,
-        exists
-            ? items.filter((wishlistItem) => wishlistItem.id !== item.id)
-            : [...items, item],
-    );
+        writeStoredItems(
+            wishlistKey,
+            exists
+                ? items.filter((wishlistItem) => wishlistItem.id !== item.id)
+                : [...items, item],
+        );
+        toast.success(
+            exists
+                ? `${item.name} removed from your wishlist.`
+                : `${item.name} added to your wishlist.`,
+        );
+
+        return true;
+    } catch {
+        toast.error('Unable to update your wishlist. Please try again.');
+
+        return false;
+    }
+}
+
+function removeCartItem(id: number) {
+    try {
+        removeStoredItem(cartKey, id);
+        toast.success('Product removed from your cart.');
+    } catch {
+        toast.error('Unable to update your cart. Please try again.');
+    }
+}
+
+function removeWishlistItem(id: number) {
+    try {
+        removeStoredItem(wishlistKey, id);
+        toast.success('Product removed from your wishlist.');
+    } catch {
+        toast.error('Unable to update your wishlist. Please try again.');
+    }
 }
 
 function removeStoredItem(key: string, id: number) {

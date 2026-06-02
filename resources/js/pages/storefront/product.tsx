@@ -182,8 +182,9 @@ export default function ProductPage({
                                         product.variant.stockQuantity === 0
                                     }
                                     onClick={() => {
-                                        cart.addItem(storefrontItem);
-                                        router.visit('/cart');
+                                        if (cart.addItem(storefrontItem)) {
+                                            router.visit('/cart');
+                                        }
                                     }}
                                 >
                                     <Zap /> Buy now

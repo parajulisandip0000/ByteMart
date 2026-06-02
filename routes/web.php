@@ -26,6 +26,7 @@ Route::get('/returns', [ContentPageController::class, 'returns'])->name('returns
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::inertia('orders', 'orders')->name('orders.index');
 });
 
 require __DIR__.'/settings.php';

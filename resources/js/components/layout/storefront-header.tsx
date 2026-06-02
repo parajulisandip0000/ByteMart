@@ -27,7 +27,7 @@ const announcements = [
 ];
 
 export function StorefrontHeader() {
-    const { url } = usePage();
+    const { url, props } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const cart = useCart();
@@ -106,8 +106,12 @@ export function StorefrontHeader() {
                                 </Link>
                             </Button>
                         </HeaderTooltip>
-                        <HeaderTooltip label="Account">
-                            <Link href="/login">
+                        <HeaderTooltip
+                            label={props.auth.user ? 'My account' : 'Log in'}
+                        >
+                            <Link
+                                href={props.auth.user ? '/dashboard' : '/login'}
+                            >
                                 <Button
                                     variant="ghost"
                                     size="icon"

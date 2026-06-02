@@ -1,5 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    Heart,
+    LayoutGrid,
+    PackageCheck,
+    Settings,
+    ShieldCheck,
+    ShoppingBag,
+    Store,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,6 +22,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { edit } from '@/routes/profile';
+import { edit as securityEdit } from '@/routes/security';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -22,18 +32,38 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Shop',
+        href: '/shop',
+        icon: Store,
+    },
+    {
+        title: 'Wishlist',
+        href: '/wishlist',
+        icon: Heart,
+    },
+    {
+        title: 'Orders',
+        href: '/orders',
+        icon: PackageCheck,
+    },
+    {
+        title: 'Cart',
+        href: '/cart',
+        icon: ShoppingBag,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
+        title: 'Profile settings',
+        href: edit(),
+        icon: Settings,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Security',
+        href: securityEdit(),
+        icon: ShieldCheck,
     },
 ];
 
