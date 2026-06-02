@@ -43,16 +43,16 @@ export function ProductCard({
         >
             <div
                 className={cn(
-                    'relative aspect-square overflow-hidden bg-slate-100',
-                    view === 'list' && 'sm:w-56 sm:shrink-0',
+                    'relative h-56 w-full overflow-hidden bg-white flex items-center justify-center border-b border-slate-100',
+                    view === 'list' && 'sm:w-56 sm:h-56 sm:shrink-0 sm:border-b-0 sm:border-r',
                 )}
             >
-                <Link href={`/products/${product.slug}`}>
+                <Link href={`/products/${product.slug}`} title={product.name} className="w-full h-full flex items-center justify-center">
                     {product.imageUrl && (
                         <img
                             src={product.imageUrl}
                             alt={product.name}
-                            className="size-full object-cover transition duration-500 group-hover:scale-105"
+                            className="h-full max-h-full w-auto max-w-full object-contain p-3 transition duration-500 group-hover:scale-105"
                         />
                     )}
                 </Link>

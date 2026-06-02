@@ -83,7 +83,7 @@ export default function ProductPage({
                     </div>
                     <div className="grid gap-9 lg:grid-cols-2">
                         <div className="grid gap-4">
-                            <div className="overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-sm">
+                            <div className="relative h-[300px] sm:h-[400px] md:h-[480px] w-full overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm flex items-center justify-center">
                                 {product.images[selectedImageIndex] && (
                                     <img
                                         src={product.images[selectedImageIndex].url}
@@ -91,7 +91,7 @@ export default function ProductPage({
                                             product.images[selectedImageIndex].altText ??
                                             product.name
                                         }
-                                        className="aspect-square w-full object-cover transition-all duration-300 hover:scale-105"
+                                        className="h-full max-h-full w-auto max-w-full object-contain p-4 transition-all duration-300 hover:scale-105"
                                     />
                                 )}
                             </div>
@@ -102,7 +102,7 @@ export default function ProductPage({
                                             key={image.id}
                                             type="button"
                                             onClick={() => setSelectedImageIndex(idx)}
-                                            className={`size-20 shrink-0 overflow-hidden rounded-2xl border bg-white transition-all ${
+                                            className={`size-20 shrink-0 overflow-hidden rounded-2xl border bg-white flex items-center justify-center transition-all ${
                                                 selectedImageIndex === idx
                                                     ? 'border-brand-blue ring-2 ring-brand-sky/40'
                                                     : 'border-slate-200 hover:border-slate-400'
@@ -111,7 +111,7 @@ export default function ProductPage({
                                             <img
                                                 src={image.url}
                                                 alt=""
-                                                className="h-full w-full object-cover"
+                                                className="h-full max-h-full w-auto max-w-full object-contain p-1"
                                             />
                                         </button>
                                     ))}

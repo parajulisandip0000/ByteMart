@@ -31,11 +31,13 @@ export default function Categories({ categories }: { categories: Category[] }) {
                             className="group overflow-hidden rounded-3xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
                         >
                             {category.imageUrl && (
-                                <img
-                                    src={category.imageUrl}
-                                    alt={category.name}
-                                    className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105"
-                                />
+                                <div className="h-48 w-full overflow-hidden bg-white flex items-center justify-center border-b border-slate-100">
+                                    <img
+                                        src={category.imageUrl}
+                                        alt={category.name}
+                                        className="h-full max-h-full w-auto max-w-full object-contain p-3 transition duration-500 group-hover:scale-105"
+                                    />
+                                </div>
                             )}
                             <div className="flex items-center justify-between p-5">
                                 <div>

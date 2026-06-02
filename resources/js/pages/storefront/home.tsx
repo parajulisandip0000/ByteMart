@@ -190,11 +190,11 @@ export default function Home({
                                     className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     {category.imageUrl && (
-                                        <div className="aspect-square w-full overflow-hidden bg-slate-100">
+                                        <div className="h-40 w-full overflow-hidden bg-white flex items-center justify-center border-b border-slate-100">
                                             <img
                                                 src={category.imageUrl}
                                                 alt={category.name}
-                                                className="size-full object-cover transition duration-500 group-hover:scale-105"
+                                                className="h-full max-h-full w-auto max-w-full object-contain p-3 transition duration-500 group-hover:scale-105"
                                             />
                                         </div>
                                     )}
@@ -226,11 +226,11 @@ export default function Home({
                                         className="group relative min-w-[140px] sm:min-w-[180px] snap-start overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg flex-shrink-0"
                                     >
                                         {category.imageUrl && (
-                                            <div className="aspect-square w-full overflow-hidden bg-slate-100">
+                                            <div className="h-40 w-full overflow-hidden bg-white flex items-center justify-center border-b border-slate-100">
                                                 <img
                                                     src={category.imageUrl}
                                                     alt={category.name}
-                                                    className="size-full object-cover transition duration-500 group-hover:scale-105"
+                                                    className="h-full max-h-full w-auto max-w-full object-contain p-3 transition duration-500 group-hover:scale-105"
                                                 />
                                             </div>
                                         )}
