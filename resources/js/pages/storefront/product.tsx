@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { InertiaFormProps } from '@inertiajs/react';
 import {
     CheckCircle2,
@@ -17,6 +17,11 @@ import { StorefrontLayout } from '@/components/layout/storefront-layout';
 import { ProductCard } from '@/components/product/product-card';
 import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
+import {
+    productToStorefrontItem,
+    useCart,
+    useWishlist,
+} from '@/lib/storefront-storage';
 import type { Product, ProductDetail } from '@/types';
 
 interface ReviewFormData {
@@ -42,6 +47,10 @@ export default function ProductPage({
     const [activeTab, setActiveTab] = useState<'description' | 'reviews'>(
         'description',
     );
+    const cart = useCart();
+    const wishlist = useWishlist();
+    const storefrontItem = productToStorefrontItem(product);
+    const wishlisted = wishlist.hasItem(product.id);
 
     const submitReview = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -162,6 +171,7 @@ export default function ProductPage({
                                     disabled={
                                         product.variant.stockQuantity === 0
                                     }
+                                    onClick={() => cart.addItem(storefrontItem)}
                                 >
                                     <ShoppingBag /> Add to cart
                                 </Button>
@@ -171,6 +181,10 @@ export default function ProductPage({
                                     disabled={
                                         product.variant.stockQuantity === 0
                                     }
+                                    onClick={() => {
+                                        cart.addItem(storefrontItem);
+                                        router.visit('/cart');
+                                    }}
                                 >
                                     <Zap /> Buy now
                                 </Button>
@@ -178,8 +192,20 @@ export default function ProductPage({
                                     size="lg"
                                     variant="outline"
                                     className="rounded-full px-6 font-bold"
+                                    onClick={() =>
+                                        wishlist.toggleItem(storefrontItem)
+                                    }
                                 >
-                                    <Heart /> Add to wishlist
+                                    <Heart
+                                        className={
+                                            wishlisted
+                                                ? 'fill-brand-orange text-brand-orange'
+                                                : ''
+                                        }
+                                    />{' '}
+                                    {wishlisted
+                                        ? 'Remove from wishlist'
+                                        : 'Add to wishlist'}
                                 </Button>
                             </div>
                             <div className="mt-8 grid gap-3 border-t border-slate-200 pt-6 text-sm text-slate-600 sm:grid-cols-2">

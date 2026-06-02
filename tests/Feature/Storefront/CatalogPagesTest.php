@@ -221,6 +221,17 @@ class CatalogPagesTest extends TestCase
             );
     }
 
+    public function test_cart_and_wishlist_pages_are_available(): void
+    {
+        $this->get(route('cart.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('storefront/cart'));
+
+        $this->get(route('wishlist.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('storefront/wishlist'));
+    }
+
     #[DataProvider('contentPages')]
     public function test_content_pages_are_available(string $routeName, string $component): void
     {

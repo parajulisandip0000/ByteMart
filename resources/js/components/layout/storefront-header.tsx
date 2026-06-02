@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { StorefrontSearch } from '@/components/layout/storefront-search';
 import { Button } from '@/components/ui/button';
+import { useCart, useWishlist } from '@/lib/storefront-storage';
 
 const navItems = [
     { label: 'Home', href: '/' },
@@ -24,6 +25,8 @@ export function StorefrontHeader() {
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+    const cart = useCart();
+    const wishlist = useWishlist();
     const isActive = (href: string) =>
         href === '/' ? url === '/' : url.startsWith(href);
 
@@ -82,8 +85,15 @@ export function StorefrontHeader() {
                             variant="ghost"
                             size="icon"
                             aria-label="Wishlist"
+                            className="relative"
+                            asChild
                         >
-                            <Heart />
+                            <Link href="/wishlist">
+                                <Heart />
+                                {wishlist.itemCount > 0 && (
+                                    <ItemCount count={wishlist.itemCount} />
+                                )}
+                            </Link>
                         </Button>
                         <Link href="/login">
                             <Button
@@ -99,11 +109,12 @@ export function StorefrontHeader() {
                             size="icon"
                             aria-label="Cart"
                             className="relative"
+                            asChild
                         >
-                            <ShoppingBag />
-                            <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-orange text-[10px] font-bold text-white">
-                                0
-                            </span>
+                            <Link href="/cart">
+                                <ShoppingBag />
+                                <ItemCount count={cart.itemCount} />
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -153,5 +164,13 @@ export function StorefrontHeader() {
                 )}
             </header>
         </>
+    );
+}
+
+function ItemCount({ count }: { count: number }) {
+    return (
+        <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-orange text-[10px] font-bold text-white">
+            {count > 9 ? '9+' : count}
+        </span>
     );
 }

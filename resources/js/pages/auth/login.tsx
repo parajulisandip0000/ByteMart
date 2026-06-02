@@ -82,7 +82,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-4 w-full bg-brand-orange font-bold hover:bg-orange-600"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
@@ -112,6 +112,7 @@ export default function Login({ status, canResetPassword }: Props) {
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Welcome back',
+    description:
+        'Sign in to continue shopping, manage your wishlist, and access your ByteMart account.',
 };

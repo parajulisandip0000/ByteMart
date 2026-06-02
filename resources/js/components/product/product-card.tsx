@@ -3,6 +3,11 @@ import { Heart, ShoppingBag } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { formatNpr } from '@/lib/currency';
+import {
+    productToStorefrontItem,
+    useCart,
+    useWishlist,
+} from '@/lib/storefront-storage';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -13,6 +18,10 @@ export function ProductCard({
     product: Product;
     view?: 'grid' | 'list';
 }) {
+    const cart = useCart();
+    const wishlist = useWishlist();
+    const storefrontItem = productToStorefrontItem(product);
+    const wishlisted = wishlist.hasItem(product.id);
     const discount = product.compareAtPrice
         ? Math.round(
               (1 - Number(product.price) / Number(product.compareAtPrice)) *
@@ -52,8 +61,15 @@ export function ProductCard({
                     size="icon"
                     className="absolute top-3 right-3 rounded-full bg-white/90"
                     aria-label={`Add ${product.name} to wishlist`}
+                    onClick={() => wishlist.toggleItem(storefrontItem)}
                 >
-                    <Heart />
+                    <Heart
+                        className={
+                            wishlisted
+                                ? 'fill-brand-orange text-brand-orange'
+                                : ''
+                        }
+                    />
                 </Button>
             </div>
             <div className={cn('p-4', view === 'list' && 'flex-1 sm:p-6')}>
@@ -85,6 +101,8 @@ export function ProductCard({
                         size="icon"
                         className="rounded-full bg-brand-blue"
                         aria-label={`Add ${product.name} to cart`}
+                        disabled={!product.inStock}
+                        onClick={() => cart.addItem(storefrontItem)}
                     >
                         <ShoppingBag />
                     </Button>
