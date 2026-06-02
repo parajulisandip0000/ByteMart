@@ -22,6 +22,7 @@ export function SidebarProduct({ product }: { product: Product }) {
             <div className="min-w-0">
                 <Link
                     href={`/products/${product.slug}`}
+                    title={product.name}
                     className="line-clamp-2 text-sm font-bold text-slate-800 transition hover:text-brand-blue"
                 >
                     {product.name}

@@ -90,8 +90,8 @@ export function ProductCard({
                 <p className="text-xs font-bold tracking-wide text-brand-cyan uppercase">
                     {product.category}
                 </p>
-                <Link href={`/products/${product.slug}`}>
-                    <h3 className="mt-1 min-h-12 font-bold text-slate-900 transition hover:text-brand-blue">
+                <Link href={`/products/${product.slug}`} title={product.name}>
+                    <h3 className="mt-1 line-clamp-1 font-bold text-slate-900 transition hover:text-brand-blue">
                         {product.name}
                     </h3>
                 </Link>
